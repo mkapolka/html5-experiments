@@ -123,7 +123,7 @@ function drawScene() {
    mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 
    mat4.identity(mvMatrix);
-   mat4.translate(mvMatrix, mvMatrix, [0, -10, -45.0]);
+   mat4.translate(mvMatrix, mvMatrix, [0, -10, -35.0]);
    mat4.rotate(mvMatrix, mvMatrix, Math. PI * (new Date()).getTime() / 5000, [0, 1, 0]);
 
    for (var renderable in renderables)
