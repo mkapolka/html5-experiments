@@ -1,7 +1,5 @@
 var renderables = [];
 var gl;
-//Array of tree renderables to be moved
-var trees = [];
 
 function initGL(canvas) {
    try {
@@ -86,8 +84,7 @@ var mvMatrixStack = [];
 var pMatrix = mat4.create();
 
 function mvPushMatrix() {
-   var copy = mat4.create();
-   mat4.set(mvMatrix, copy);
+   var copy = mat4.clone(mvMatrix);
    mvMatrixStack.push(copy);
 }
 
@@ -111,20 +108,10 @@ function degToRad(degrees) {
 
 function initBuffers() {
    var params = makeTestParams();
+   segment = generateSegment(null, params);
 
-   for (var i = 0; i < 10; i++)
-   {
-      var segment = generateSegment(null, params);
-      var rr = makeSegmentRenderable(segment, gl);
-      renderables.push(rr);
-      trees.push(rr);
-      //mat4.translate(mvMatrix, [0, -10, -45.0]);
-      vec3.set(rr.translation, [0, -10, -45.0]);
-   }
-   //segment = generateSegment(null, params);
-
-   //var rr = makeSegmentRenderable(segment, gl);
-   //renderables.push(rr);
+   var rr = makeSegmentRenderable(segment, gl);
+   renderables.push(rr);
 }
 
 var rotation = 0;
@@ -133,9 +120,11 @@ function drawScene() {
    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-   mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+   mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 
    mat4.identity(mvMatrix);
+   mat4.translate(mvMatrix, mvMatrix, [0, -10, -45.0]);
+   mat4.rotate(mvMatrix, mvMatrix, Math. PI * (new Date()).getTime() / 5000, [0, 1, 0]);
 
    for (var renderable in renderables)
    {
@@ -147,8 +136,7 @@ function drawRenderable(renderable, viewMatrix)
 {
    mvPushMatrix();
 
-   //mat4.multiply(viewMatrix, renderable.mvMatrix);
-   mat4.multiply(viewMatrix, renderable.getMVMatrix());
+   mat4.multiply(viewMatrix, viewMatrix, renderable.mvMatrix);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, renderable.vertexBufferPointer);
    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, renderable.vertexBufferPointer.itemSize, gl.FLOAT, false, 0, 0);
@@ -167,22 +155,14 @@ function Renderable(glContext)
 {
    this.glContext = glContext;
 
-   //this.vertexBufferPointer = null;
-   //this.colorBufferPointer = null;
-   //this.elementBufferPointer = null;
    this.vertexBufferPointer = gl.createBuffer();
    this.colorBufferPointer = gl.createBuffer();
    this.elementBufferPointer = gl.createBuffer();
-
-   this.rotation = quat4.create();
-   this.translation = vec3.create();
-   this.scale = vec3.create();
 
    this.mvMatrix = null;
 
    this.setVertices = function(array)
    {
-      //this.vertexBufferPointer = glContext.createBuffer();
       glContext.bindBuffer(glContext.ARRAY_BUFFER, this.vertexBufferPointer);
       glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(array), glContext.STATIC_DRAW);
       this.vertexBufferPointer.itemSize = 3;
@@ -191,7 +171,6 @@ function Renderable(glContext)
 
    this.setColors = function(array)
    {
-      //this.colorBufferPointer = glContext.createBuffer();
       glContext.bindBuffer(glContext.ARRAY_BUFFER, this.colorBufferPointer);
       glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(array), glContext.STATIC_DRAW);
       this.colorBufferPointer.itemSize = 4;
@@ -200,22 +179,10 @@ function Renderable(glContext)
 
    this.setElements = function(array)
    {
-      //this.elementBufferPointer = glContext.createBuffer();
       glContext.bindBuffer(glContext.ELEMENT_ARRAY_BUFFER, this.elementBufferPointer);
       glContext.bufferData(glContext.ELEMENT_ARRAY_BUFFER, new Uint16Array(array), glContext.STATIC_DRAW);
       this.elementBufferPointer.itemSize = 1;
       this.elementBufferPointer.numItems = array.length;
-   }
-
-   this.getMVMatrix = function()
-   {
-      mat4.identity(this.mvMatrix);
-      mat4.scale(this.mvMatrix, this.scale);
-      //mat4.rotate(this.mvMatrix, this.rotation);
-      //mat4.translate(this.mvMatrix, this.translation);
-      mat4.multiply(this.mvMatrix, mat4.fromRotationTranslation(this.rotation, this.translation));
-
-      return this.mvMatrix;
    }
 }
 
@@ -223,11 +190,6 @@ function Renderable(glContext)
 var lastTime = 0;
 
 function animate() {
-   for (var tree in trees)
-   {
-      mat4.translate(trees[tree].mvMatrix, [0, 0, 1]);
-      quat4.rotateZ(trees[tree], Math. PI * (new Date()).getTime() / 5000, [0, 1, 0]);
-   }
 }
 
 function tick() {
@@ -242,8 +204,7 @@ function webGLStart() {
    initShaders()
    initBuffers();
 
-   //gl.clearColor(0.0, 0.0, 0.0, 1.0);
-   gl.clearColor(0.0, 0.0, 1 / 255, 1.0);
+   gl.clearColor(0.0, 0.0, 0.0, 1.0);
    gl.enable(gl.DEPTH_TEST);
 
    tick();

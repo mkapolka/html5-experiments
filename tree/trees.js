@@ -173,31 +173,31 @@ function addSegmentToRenderable(vertexArray, elementArray, colorArray,
                                 rootIndexStart, templateVertices, segment,
                                 rootMatrix, level)
 {
-   var m = mat4.create();
-   mat4.set(rootMatrix, m);
+   var m = mat4.clone(rootMatrix);
 
    var vUp = vec3.create();
-   vUp.set([0,1,0], vUp);
+   vec3.set(vUp, 0, 1, 0);
    var vFor = vec3.create();
-   vFor.set([Math.cos(segment.direction), 0, Math.sin(segment.direction)], vFor);
-   var vRot = vec3.cross(vUp, vFor);
+   vec3.set(vFor, Math.cos(segment.direction), 0, Math.sin(segment.direction));
+   var vRot = vec3.create();
+   vRot = vec3.cross(vRot, vUp, vFor);
 
-   mat4.rotate(m, segment.angle, vRot);
-   mat4.translate(m, [0, segment.segmentLength, 0]);
+   mat4.rotate(m, m, segment.angle, vRot);
+   mat4.translate(m, m, [0, segment.segmentLength, 0]);
 
    var startIndex = vertexArray.length;
 
    var scaleMatrix = mat4.create();
    mat4.identity(scaleMatrix);
    var dist = countSegmentMaxHeight(getBaseSegment(segment)) - countSegmentMaxHeight(segment);
-   mat4.scale(scaleMatrix, [Math.pow(.6, dist), 1, Math.pow(.6, dist)]);
+   mat4.scale(scaleMatrix, scaleMatrix, [Math.pow(.6, dist), 1, Math.pow(.6, dist)]);
    //Add vertices
    for (var i in templateVertices)
    {
       //Vertex Location
-      var v = vec3.create(templateVertices[i]);
-      v = mat4.multiplyVec3(scaleMatrix, v);
-      v = mat4.multiplyVec3(m, v);
+      var v = vec3.clone(templateVertices[i]);
+      vec3.transformMat4(v, v, scaleMatrix);
+      vec3.transformMat4(v, v, m);
       vertexArray.push(v);
 
       //Color
@@ -239,7 +239,9 @@ function makeTemplateVertices()
 
    for (var i = 0; i < 6; i++)
    {
-      templateVertices.push(vec3.create([Math.cos(i * Math.PI / 3), 0, Math.sin(i * Math.PI / 3)]));
+      var v = vec3.create();
+      vec3.set(v,Math.cos(i * Math.PI / 3), 0, Math.sin(i * Math.PI / 3));
+      templateVertices.push(v);
    }
 
    return templateVertices;
