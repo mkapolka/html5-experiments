@@ -84,8 +84,7 @@ var mvMatrixStack = [];
 var pMatrix = mat4.create();
 
 function mvPushMatrix() {
-   var copy = mat4.create();
-   mat4.set(mvMatrix, copy);
+   var copy = mat4.clone(mvMatrix);
    mvMatrixStack.push(copy);
 }
 
@@ -111,8 +110,6 @@ function initBuffers() {
    var params = makeTestParams();
    segment = generateSegment(null, params);
 
-   var m4 = mat4.create();
-   mat4.identity(m4);
    var rr = makeSegmentRenderable(segment, gl);
    renderables.push(rr);
 }
@@ -123,11 +120,11 @@ function drawScene() {
    gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-   mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+   mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 
    mat4.identity(mvMatrix);
-   mat4.translate(mvMatrix, [0, -10, -45.0]);
-   mat4.rotate(mvMatrix, Math. PI * (new Date()).getTime() / 5000, [0, 1, 0]);
+   mat4.translate(mvMatrix, mvMatrix, [0, -10, -35.0]);
+   mat4.rotate(mvMatrix, mvMatrix, Math. PI * (new Date()).getTime() / 5000, [0, 1, 0]);
 
    for (var renderable in renderables)
    {
@@ -139,7 +136,7 @@ function drawRenderable(renderable, viewMatrix)
 {
    mvPushMatrix();
 
-   mat4.multiply(viewMatrix, renderable.mvMatrix);
+   mat4.multiply(viewMatrix, viewMatrix, renderable.mvMatrix);
 
    gl.bindBuffer(gl.ARRAY_BUFFER, renderable.vertexBufferPointer);
    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, renderable.vertexBufferPointer.itemSize, gl.FLOAT, false, 0, 0);
@@ -158,9 +155,6 @@ function Renderable(glContext)
 {
    this.glContext = glContext;
 
-   //this.vertexBufferPointer = null;
-   //this.colorBufferPointer = null;
-   //this.elementBufferPointer = null;
    this.vertexBufferPointer = gl.createBuffer();
    this.colorBufferPointer = gl.createBuffer();
    this.elementBufferPointer = gl.createBuffer();
@@ -169,7 +163,6 @@ function Renderable(glContext)
 
    this.setVertices = function(array)
    {
-      //this.vertexBufferPointer = glContext.createBuffer();
       glContext.bindBuffer(glContext.ARRAY_BUFFER, this.vertexBufferPointer);
       glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(array), glContext.STATIC_DRAW);
       this.vertexBufferPointer.itemSize = 3;
@@ -178,7 +171,6 @@ function Renderable(glContext)
 
    this.setColors = function(array)
    {
-      //this.colorBufferPointer = glContext.createBuffer();
       glContext.bindBuffer(glContext.ARRAY_BUFFER, this.colorBufferPointer);
       glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(array), glContext.STATIC_DRAW);
       this.colorBufferPointer.itemSize = 4;
@@ -187,7 +179,6 @@ function Renderable(glContext)
 
    this.setElements = function(array)
    {
-      //this.elementBufferPointer = glContext.createBuffer();
       glContext.bindBuffer(glContext.ELEMENT_ARRAY_BUFFER, this.elementBufferPointer);
       glContext.bufferData(glContext.ELEMENT_ARRAY_BUFFER, new Uint16Array(array), glContext.STATIC_DRAW);
       this.elementBufferPointer.itemSize = 1;
