@@ -271,7 +271,6 @@ function makeSegmentRenderable(segment, glContext)
    var upColors = unpackArray(colorArray);
    var upVerts = unpackArray(vertexArray);
    var upElements = elementArray;
-   var upColors = unpackArray(colorArray);
 
    renderable.setVertices(upVerts);
    renderable.setElements(upElements);
