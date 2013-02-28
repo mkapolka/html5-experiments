@@ -1,6 +1,6 @@
 //Rose project specific code
 
-function makeSheetRenderable(width, height)
+function makeSheetRenderable(width, height, glContext)
 {
    var vertices = [];
    var elements = [];
@@ -29,22 +29,29 @@ function makeSheetRenderable(width, height)
    }
 
    //Elements (Triangle strips)
-   for (var x = 0; x < width; x+=2)
+   for (var x = 0; x < width-1; x+=2)
    {
-      for (var y = 0; y < height ;y++)
+      for (var y = 0; y < height; y++)
       {
          elements.push(p2i(x,y));
          elements.push(p2i(x+1,y));
       }
 
-      if (x+1 < width)
+      if (x+2 < width)
       {
          elements.push(p2i(x+1,height-1));
-         for (var y = height - 1; y > 0; y++)
+         for (var y = height - 1; y >= 0; y--)
          {
-            elements.push(p2i(x,y));
             elements.push(p2i(x+1,y));
+            elements.push(p2i(x+2,y));
          }
       }
    }
+
+   var renderable = new Renderable(glContext);
+   renderable.setVertices(vertices, true);
+   renderable.setElements(elements);
+   renderable.setColors(colors, true);
+
+   return renderable;
 }

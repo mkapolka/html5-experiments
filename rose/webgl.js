@@ -103,11 +103,12 @@ function degToRad(degrees) {
 }
 
 function initBuffers() {
-   var params = makeTestParams();
-   segment = generateSegment(null, params);
+   //var params = makeTestParams();
+   //segment = generateSegment(null, params);
 
-   var rr = makeSegmentRenderable(segment, gl);
-   renderables.push(rr);
+   //var rr = makeSegmentRenderable(segment, gl);
+   //renderables.push(rr);
+   renderables.push(makeSheetRenderable(10,10,gl));
 }
 
 var rotation = 0;
@@ -147,6 +148,25 @@ function drawRenderable(renderable, viewMatrix)
    mvPopMatrix();
 }
 
+//Unpacks an array of vectors into an array of values.
+//This is useful because the addSegmentToRenderable method
+//expects the values in its vertexArray to be glMatrix vec3s, but
+//WebGL buffers should be filled with primative values
+function unpackArray(input)
+{
+   var output = [];
+
+   for (var child in input)
+   {
+      for (var i = 0; i < input[child].length; i++)
+      {
+         output.push(input[child][i]);
+      }
+   }
+
+   return output;
+}
+
 function Renderable(glContext)
 {
    this.glContext = glContext;
@@ -155,26 +175,39 @@ function Renderable(glContext)
    this.colorBufferPointer = gl.createBuffer();
    this.elementBufferPointer = gl.createBuffer();
 
-   this.mvMatrix = null;
+   this.mvMatrix = mat4.create();
+   mat4.identity(this.mvMatrix);
 
-   this.setVertices = function(array, explode = false)
+   this.setVertices = function(array, explode)
    {
+      if (explode)
+      {
+         array = unpackArray(array);
+      }
       glContext.bindBuffer(glContext.ARRAY_BUFFER, this.vertexBufferPointer);
       glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(array), glContext.STATIC_DRAW);
       this.vertexBufferPointer.itemSize = 3;
       this.vertexBufferPointer.numItems = array.length / 3;
    }
 
-   this.setColors = function(array)
+   this.setColors = function(array, explode)
    {
+      if (explode)
+      {
+         array = unpackArray(array);
+      }
       glContext.bindBuffer(glContext.ARRAY_BUFFER, this.colorBufferPointer);
       glContext.bufferData(glContext.ARRAY_BUFFER, new Float32Array(array), glContext.STATIC_DRAW);
       this.colorBufferPointer.itemSize = 4;
       this.colorBufferPointer.numItems = array.length / 3;
    }
 
-   this.setElements = function(array)
+   this.setElements = function(array, explode)
    {
+      if (explode)
+      {
+         array = unpackArray(array);
+      }
       glContext.bindBuffer(glContext.ELEMENT_ARRAY_BUFFER, this.elementBufferPointer);
       glContext.bufferData(glContext.ELEMENT_ARRAY_BUFFER, new Uint16Array(array), glContext.STATIC_DRAW);
       this.elementBufferPointer.itemSize = 1;

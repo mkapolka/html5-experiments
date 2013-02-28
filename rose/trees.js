@@ -146,25 +146,6 @@ function branchSegmentParams(params)
    return sp2;
 }
 
-//Unpacks an array of vectors into an array of values.
-//This is useful because the addSegmentToRenderable method
-//expects the values in its vertexArray to be glMatrix vec3s, but
-//WebGL buffers should be filled with primative values
-function unpackArray(input)
-{
-   var output = [];
-
-   for (var child in input)
-   {
-      for (var i = 0; i < input[child].length; i++)
-      {
-         output.push(input[child][i]);
-      }
-   }
-
-   return output;
-}
-
 //Generates the vertex, element, and color array data for a tree segment
 //and its children recursively. 
 function addSegmentToRenderable(vertexArray, elementArray, colorArray,
@@ -269,7 +250,6 @@ function makeSegmentRenderable(segment, glContext)
    var upColors = unpackArray(colorArray);
    var upVerts = unpackArray(vertexArray);
    var upElements = elementArray;
-   var upColors = unpackArray(colorArray);
 
    renderable.setVertices(upVerts);
    renderable.setElements(upElements);
