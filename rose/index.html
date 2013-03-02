@@ -2,7 +2,7 @@
 <html>
 
 <head>
-<title>Ghost Trees</title>
+<title>Rose</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 <link rel="image_src" href="http://marekkapolka.com/art/webgl/tree/tree_ss.png"/>
 
@@ -36,72 +36,10 @@
 <script type="text/javascript" src="webgl.js"></script>
 <script type="text/javascript" src="trees.js"></script>
 <script type="text/javascript" src="rose.js"></script>
-<script type="text/javascript">
-function makeTestParams()
-{
-   var params = new SegmentParameters();
-   params.minSegmentLength = 1;
-   params.maxSegmentLength = 2;
-   params.minSegmentAngle = Math.PI / 16;
-   params.maxSegmentAngle = Math.PI / 8;
-   params.minNumBranches = 1;
-   params.maxNumBranches = 4;
-   params.segments = 9;
-   params.branchLengthFactor = 2;
-   params.branchAngleFactor = 1.5;
-   params.branchSegmentFactor = 1;
-   params.branchBranchFactor = .5;
-
-   return params;
-}
-
-var segment;
-
-//Takes a renderable and re-builds the tree based on a new segment
-//This method exists because I don't know how to clear allocated WebGL buffers yet,
-//but I assume (hope) that if you call gl.bufferData on a buffer it'll clear the existing data
-//before it pushes the new data.
-function reuseRenderable(renderable, segment)
-{
-   var templateVertices = makeTemplateVertices();
-
-   var vertexArray = templateVertices.slice(0);
-   var elementArray = [];
-   var colorArray = [];
-   //Initialize color array
-   for (var i = 0; i < vertexArray.length; i++)
-   {
-      colorArray.push([1,1,1,1]);
-   }
-   var rootMatrix = mat4.create();
-   mat4.identity(rootMatrix);
-
-   addSegmentToRenderable(vertexArray, elementArray, colorArray, 0, templateVertices, segment, rootMatrix, 0);
-
-   var upColors = unpackArray(colorArray);
-   var upVerts = unpackArray(vertexArray);
-   var upElements = elementArray;
-   var upColors = unpackArray(colorArray);
-
-   renderable.setVertices(upVerts);
-   renderable.setElements(upElements);
-   renderable.setColors(upColors);
-
-   return renderable;
-}
-
-function reuseClick()
-{
-   var sp = makeTestParams();
-   var segment = generateSegment(null, sp);
-   var renderable = renderables[0];
-   reuseRenderable(renderable, segment);
-}
-</script>
 
 <style>
 body {
-   background: #000;
+   background: #111;
 }
 canvas {
    display: block;
@@ -117,7 +55,6 @@ button {
 
 <body onload="webGLStart();">
     <div><canvas id="lesson04-canvas" style="border: none;" width="700" height="700"></canvas></div>
-    <button onclick="reuseClick()">New Tree</button>
 </body>
 
 </html>

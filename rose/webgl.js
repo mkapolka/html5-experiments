@@ -103,12 +103,20 @@ function degToRad(degrees) {
 }
 
 function initBuffers() {
-   //var params = makeTestParams();
-   //segment = generateSegment(null, params);
+   var sheet = makeSheetRenderable(100,100,gl);
+   renderables.push(sheet);
+   xCurveBend3(sheet.vertices, .5);
+   sheet.setVertices(sheet.vertices, true);
 
-   //var rr = makeSegmentRenderable(segment, gl);
-   //renderables.push(rr);
-   renderables.push(makeSheetRenderable(10,10,gl));
+   //var sheet2 = makeSheetRenderable(10,10,gl);
+   //renderables.push(sheet2);
+   //xCurveBend3(sheet2.vertices, .636);
+   //sheet2.setVertices(sheet2.vertices, true);
+   //mat4.translate(sheet.mvMatrix, sheet.mvMatrix, [0,0,1]);
+   //mat4.rotateY(sheet2.mvMatrix, sheet2.mvMatrix, Math.PI);
+
+   mat4.rotateZ(sheet.mvMatrix, sheet.mvMatrix, -Math.PI / 2);
+   //mat4.rotateZ(sheet2.mvMatrix, sheet2.mvMatrix, -Math.PI / 2);
 }
 
 var rotation = 0;
@@ -120,7 +128,7 @@ function drawScene() {
    mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 
    mat4.identity(mvMatrix);
-   mat4.translate(mvMatrix, mvMatrix, [0, -10, -35.0]);
+   mat4.translate(mvMatrix, mvMatrix, [0, 0, -2]);
    mat4.rotate(mvMatrix, mvMatrix, Math. PI * (new Date()).getTime() / 5000, [0, 1, 0]);
 
    for (var renderable in renderables)
@@ -175,11 +183,16 @@ function Renderable(glContext)
    this.colorBufferPointer = gl.createBuffer();
    this.elementBufferPointer = gl.createBuffer();
 
+   this.vertices = [];
+   this.elements = [];
+   this.colors = [];
+
    this.mvMatrix = mat4.create();
    mat4.identity(this.mvMatrix);
 
    this.setVertices = function(array, explode)
    {
+      this.vertices = array;
       if (explode)
       {
          array = unpackArray(array);
@@ -192,6 +205,7 @@ function Renderable(glContext)
 
    this.setColors = function(array, explode)
    {
+      this.colors = array;
       if (explode)
       {
          array = unpackArray(array);
@@ -204,6 +218,7 @@ function Renderable(glContext)
 
    this.setElements = function(array, explode)
    {
+      this.elements = array;
       if (explode)
       {
          array = unpackArray(array);
