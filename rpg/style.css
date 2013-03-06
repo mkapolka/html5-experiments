@@ -1,0 +1,27 @@
+@font-face {
+   font-family: uo;
+   src: local(uo), url('uo-classic_v0.2.ttf') format('opentype');
+}
+
+body p {
+   -moz-border-radius: 10px;
+   border-radius: 10px;
+   margin: 20px;
+   padding: 30px;
+   background: url('./paper.jpg');
+
+   min-height: 500px;
+}
+
+body {
+   background: #000;
+}
+
+.gametext {
+   font-family: uo;
+}
+
+.gametext a {
+   color: #D44;
+   text-decoration: none;
+}
