@@ -358,3 +358,10 @@ function get_params_by_type(object, type)
 
    return output;
 }
+
+function doTick()
+{
+   for (var i in game_objects) {
+      call(game_objects[i], "tick"); 
+   }
+}
