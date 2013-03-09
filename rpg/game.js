@@ -4,6 +4,21 @@ var room_contents = [
    lavender, tea_kettle, fire_pit, burning_thing, water
 ];
 
+var Level = function(width, height) {
+   this.contents = [];
+   for (var w = 0; w < width; w++)
+   {
+      contents.push([]);
+   }
+
+   this.width = width;
+   this.height = height;
+
+   this.getTile = function(x,y){
+      return contents[x][y];
+   }
+}
+
 var game_objects = [];
 
 var holding = undefined;

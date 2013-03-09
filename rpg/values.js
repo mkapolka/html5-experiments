@@ -4,7 +4,7 @@ burning_thing = {
    temperature: 10,
    flammable: 5,
    burning: 5,
-   phlogiston: 10,
+   //phlogiston: 10,
    durability: 10
 }
 
@@ -64,12 +64,28 @@ tea_kettle = {
    size: 4,
    watertight: 9,
    openable: 10,
-   temperature: 10,
    contents : [water],
    durability: 10
 }
 
-descriptions = {
+parameters = {
+   openable : {
+      values: {
+         5: "can be opened",
+      },
+      default: 0,
+      types: ["mechanical"],
+      functions : {
+         "open" : function(me) {
+            if (me.opened === undefined || me.opened < 5)
+            {
+               pushGameText(me.name + " was opened");
+               me.opened = 10;
+            }
+         }
+      }
+   },
+
    boilable: {
       values: {
          0: "would boil at room temperature",
@@ -139,14 +155,18 @@ descriptions = {
             if (me.contents !== undefined){
                for (var i in me.contents)
                {
-                  call(me.contents[i], "heat", me.temperature);
+                  call(me.contents[i], "heat", me, me.temperature);
                }
             }
+
+            if (me.parent !== undefined)
+            {
+               call(me.parent, "heat", me, me.temperature);
+            }
          }, 
-         "heat" : function(me, amount) {
-            console.log(me.name + " wants to be heated. ");
+         "heat" : function(me, caller, amount) {
+            if (me === caller) return;
             if (me.temperature < amount) {
-               console.log(me.name + " was heated!");
                me.temperature = amount;
             }
          }

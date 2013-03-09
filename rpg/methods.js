@@ -202,16 +202,16 @@ function reveal(object, method)
    var props_revealed = 0;
    for (var k in object)
    {
-      if (descriptions[k] !== undefined && descriptions[k].revealed_by !== undefined)
+      if (parameters[k] !== undefined && parameters[k].revealed_by !== undefined)
       {
-         if (descriptions[k].revealed_by.indexOf(method) !== -1)
+         if (parameters[k].revealed_by.indexOf(method) !== -1)
          {
             var last = "";
-            for (var i in descriptions[k].values)
+            for (var i in parameters[k].values)
             {
                if (i <= object[k])
                {
-                  last = descriptions[k].values[i];
+                  last = parameters[k].values[i];
                }
             }
             if (last !== "")
@@ -263,11 +263,11 @@ function call(caller, method, dotdotdot)
 {
    for (var p in caller)
    {
-      if (descriptions[p] !== undefined && descriptions[p].functions !== undefined)
+      if (parameters[p] !== undefined && parameters[p].functions !== undefined)
       {
-         if (descriptions[p].functions[method] !== undefined)
+         if (parameters[p].functions[method] !== undefined)
          {
-            var m = descriptions[p].functions[method];
+            var m = parameters[p].functions[method];
             switch (arguments.length - 2)
             {
                case 0:
@@ -301,9 +301,9 @@ function call(caller, method, dotdotdot)
 
 function param_invert(param_name, value)
 {
-   if (descriptions[param_name] !== undefined && descriptions[param_name].max_value !== undefined)
+   if (parameters[param_name] !== undefined && parameters[param_name].max_value !== undefined)
    {
-      return value - descriptions[param_name].max_value;
+      return value - parameters[param_name].max_value;
    }
 
    return 10 - value;
@@ -315,11 +315,11 @@ function param_safe_get(who, param_name)
    {
       return who[param_name];
    } else {
-      if (descriptions[param_name] !== undefined)
+      if (parameters[param_name] !== undefined)
       {
-         if (descriptions[param_name].default !== undefined)
+         if (parameters[param_name].default !== undefined)
          {
-            return descriptions[param_name].default;
+            return parameters[param_name].default;
          } else {
             return DEFAULT_DEFAULT_VALUE;
          }
@@ -329,16 +329,16 @@ function param_safe_get(who, param_name)
 
 function get_string_template(param_name, param_value)
 {
-   if (descriptions[param_name] !== undefined)
+   if (parameters[param_name] !== undefined)
    {
-      return descriptions[param_name][param_value];
+      return parameters[param_name][param_value];
    }
 }
 
 function get_param_types(param_name)
 {
-   if (descriptions[param_name] === undefined) return [];
-   return descriptions[param_name].types;
+   if (parameters[param_name] === undefined) return [];
+   return parameters[param_name].types;
 }
 
 function get_params_by_type(object, type)
