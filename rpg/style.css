@@ -3,25 +3,80 @@
    src: local(uo), url('uo-classic_v0.2.ttf') format('opentype');
 }
 
-body p {
+body {
+   font-family: uo;
+   background: #000;
+}
+
+h1 {
+   text-align: center;
+}
+
+.content {
    -moz-border-radius: 10px;
    border-radius: 10px;
    margin: 20px;
    padding: 30px;
+   padding-top: 10px;
    background: url('./paper.jpg');
 
    min-height: 500px;
 }
 
-body {
-   background: #000;
-}
-
 .gametext {
-   font-family: uo;
+   font-size: 1em;
+   display: block;
+
+   max-height: 500px;
+   overflow: scroll;
 }
 
 .gametext a {
    color: #D44;
    text-decoration: none;
+}
+
+.gametext p {
+   border: 10px;
+}
+
+.button {
+   margin: 10px;
+   padding: 15px;
+   padding-left: 20px;
+   padding-right: 20px;
+   
+   display: inline-block;
+
+   background: url('./img/gem_square_downscaled.png');
+   background-size: 100% 100%;
+   color: black;
+
+   text-align: center;
+   cursor: pointer;
+
+   position: relative;
+   bottom: 0px;
+
+   transition: all .25s;
+   -moz-transition: all .25s;
+   -webkit-transition: all .25s;
+   -o-transition: all .25s;
+
+   /*Make it unselectable */
+   -webkit-touch-callout: none;
+   -webkit-user-select: none;
+   -khtml-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
+   user-select:none;
+}
+
+.button:hover {
+   transition: all .25s;
+   -moz-transition: all .25s;
+   -webkit-transition: all .25s;
+   -o-transition: all .25s;
+
+   bottom: 10px;
 }

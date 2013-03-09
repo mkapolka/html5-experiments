@@ -8,26 +8,31 @@ function createThing(name)
    return thing;
 }
 
-function describeThing(thing, method)
-{
-   var output = "This " + thing.name + "...\n"; 
-   for (var p in thing.properties)
-   {
-      
-   }
-}
-
 function getPropertyArchetype(name)
 {
    return RPG.properties[name];
 }
 
-function describeProperty(name, property)
+function duplicateObject(object)
 {
-   var archetype = RPG.properties[name];
+   var output = {};
 
-   if (archetype != null)
+   for (var k in object)
    {
-      
+      if (typeof(object[k]) !== "number")
+      {
+         output[k] = duplicateObject(object[k]);
+      } else {
+         output[k] = object[k];
+      }
+   }
+
+   return output;
+}
+
+function doTick()
+{
+   for (var i in game_objects) {
+      call(game_objects[i], "tick"); 
    }
 }

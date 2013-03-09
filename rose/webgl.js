@@ -105,7 +105,7 @@ function degToRad(degrees) {
 function initBuffers() {
    var sheet = makeSheetRenderable(100,100,gl);
    renderables.push(sheet);
-   xCurveBend3(sheet.vertices, .5);
+   xCurveBend3(sheet.vertices, .2);
    sheet.setVertices(sheet.vertices, true);
 
    //var sheet2 = makeSheetRenderable(10,10,gl);
