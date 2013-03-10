@@ -137,7 +137,7 @@ function deleteObject(object)
    if (object.parent === undefined) return;
    if (Array.isArray(object.parent))
    {
-      object.parent.splice(object.parent.indexOf(object));
+      object.parent.splice(object.parent.indexOf(object), 1);
    } else { //must be an object
       for (var o in object.parent)
       {
@@ -359,9 +359,44 @@ function get_params_by_type(object, type)
    return output;
 }
 
-function doTick()
+function doTick(room)
 {
-   for (var i in game_objects) {
-      call(game_objects[i], "tick"); 
+   for (var i in room.objects) {
+      function callTick(obj)
+      {
+         call(obj,"tick");
+         if (obj.contents !== undefined)
+         {
+            for (var o in obj.contents)
+            {
+               callTick(obj.contents[o]);   
+            }
+         }
+      }
+
+      callTick(room.objects[i]);
    }
+}
+
+function getGlyph(object)
+{
+   if (object === undefined) return ".";
+   if (object.form !== undefined && forms[object.form] !== undefined)
+   {
+      return forms[object.form].symbol;
+   }
+
+   return object.name.charAt(0).toUpperCase();
+}
+
+function isObjectAdjacent(objectA, objectB)
+{
+   return isAdjacent(objectA.x, objectA.y, objectB.x, objectB.y);
+}
+
+function isAdjacent(x1,y1,x2,y2)
+{
+   var dx = Math.abs(x1 - x2);
+   var dy = Math.abs(y1 - y2);
+   return (dx <= 1 && dy <= 1);
 }

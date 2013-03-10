@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-   <title>RPG Mechanic Test</title>
+   <title>The Monastary Garden</title>
    <link rel="stylesheet" href="style.css"></link>
 
    <script type="text/javascript" src="jquery-1.9.1.js"></script>
@@ -12,25 +12,16 @@
 </head>
 <body onload="game_init()">
    <div class="content">
-      <h1>The Monk's Garden</h1>
-      <p class="gametext">
-      </p>
-      <div id="actions">
-         <div class="button" onmouseup="click_action('look')">Look</div>
-         <div class="button" onclick="click_action('feel')">Feel</div>
-         <div class="button" onclick="click_action('wait')">Wait</div>
-         <div class="button" id="grabbutton" onclick="click_action('grab')">Grab</div>
-         <div class="button" id="putbutton" onclick="click_action('put')" hidden="true">Put</div>
-      </div>
-      <div id="objects" hidden="true">
-         <div id="object_description"></div>
-         <div id="object_buttons">
-            <div class="button" onmouseup="click_object(0)">Lavender</div>
-            <div class="button" onmouseup="click_object(1)">Tea Kettle</div>
-            <div class="button" onmouseup="click_object(2)">Fire Pit</div>
-            <div class="button" onmouseup="click_object(3)">Burning Thing</div>
+      <h1>The Monastary Garden</h1>
+      <div id="top_part">
+         <div id="tiles_container"></div>
+         <div id="hover">
+            <div id="hovertext"></div>
+            <div id="hoverbuttons"></div>
          </div>
       </div>
+      <ul class="gametext clear">
+      </ul>
    </div>
 </body>
 </html>

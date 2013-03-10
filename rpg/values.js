@@ -1,10 +1,14 @@
+player = {
+   name: "You, the player",
+   form: "player"
+}
 burning_thing = {
    name: "a burning thing",
    form: "none",
    temperature: 10,
    flammable: 5,
    burning: 5,
-   //phlogiston: 10,
+   phlogiston: 10,
    durability: 10
 }
 
@@ -13,7 +17,9 @@ lavender = {
    form: "lavender",
    material: "plant",
    state: "solid",
-   flammable: 7,
+   flammable: 3,
+   temperature: 5,
+   phlogiston: 10,
    aromatic: 5,
    calming: 6,
    edible: 4,
@@ -48,7 +54,7 @@ water = {
    state: "liquid",
    flammable: 0,
    density: 5,
-   temperature: 0,
+   temperature: 5,
    boilable: 6
 }
 
@@ -64,6 +70,7 @@ tea_kettle = {
    size: 4,
    watertight: 9,
    openable: 10,
+   temperature: 5,
    contents : [water],
    durability: 10
 }
@@ -71,19 +78,48 @@ tea_kettle = {
 parameters = {
    openable : {
       values: {
-         5: "can be opened",
+         1: "can be opened",
       },
       default: 0,
       types: ["mechanical"],
       functions : {
          "open" : function(me) {
-            if (me.opened === undefined || me.opened < 5)
+            if (me.opened === undefined || me.opened < 1)
             {
                pushGameText(me.name + " was opened");
-               me.opened = 10;
+               me.open = 1;
+            }
+         },
+         "close" : function(me) {
+            if (me.opened !== undefined || me.opened > 0)
+            {
+               pushGameText(me.name + " was closed");
+               me.open = undefined;
             }
          }
       }
+   },
+
+   open : {
+      values : {
+         0: "is closed",
+         1: "is open"
+      },
+      types: ["mechanical"],
+      functions : {
+         "jostle" : function(me, jostler, force) {
+            if (me.contents !== undefined)
+            {
+               for (var i in me.contents)
+               {
+                  if (Math.random() < .1)
+                  {
+                     
+                  }
+               }
+            }
+         }//jostle
+      }//functions
    },
 
    boilable: {
@@ -262,7 +298,20 @@ parameters = {
             {
                pushGameText(me.name + " is destroyed!");
                deleteObject(me);
+               updateTileText(room);
             }
+         }
+      }
+   }
+}
+
+forms = {
+   "player" : {
+      name: "player",
+      symbol: "@",
+      actions : {
+         "move" : {
+            
          }
       }
    }
