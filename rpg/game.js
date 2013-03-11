@@ -190,6 +190,7 @@ function doAction(action)
                moveAdjacentTo(room, player, object);
             } 
             pushGameText(revealToHTML(reveal(object, "feel")));
+            pushGameText(revealToHTML(reveal(object, "alchemy_knowledge")));
             updateTileText(room);
             deselectTile(selected_tile);
          });
@@ -302,8 +303,12 @@ function showLocationButtons(room, x, y, callback)
 
 function pickup(object)
 {
+   if (player.holding !== undefined) {
+      pushGameText("You are already holding " + player.holding.name + ", you cannot pick up " + object.name + "!");
+      return;
+   }
    pushGameText("You pick up " + object.name);
-   room.contents.splice(room.contents.indexOf(object), 1);
+   setContainer(object, player);
    player.holding = object;
    updateTileText(room);
 }
@@ -324,8 +329,7 @@ function putDownIn(container)
    if (player.holding !== undefined)
    {
       pushGameText("You put " + player.holding.name + " inside " + container.name);
-      container.contents.push(player.holding);
-      player.holding.parent = container.contents;
+      setContainer(player.holding, container);
       player.holding = undefined;
       updateTileText(room);
    }
@@ -416,8 +420,7 @@ function game_init()
    for (var i in room_contents)
    {
       var object = createObjectFromTemplate(room_contents[i]);
-      object.x = Math.floor(Math.random() * 10);
-      object.y = Math.floor(Math.random() * 10);
+      moveObject(object, Math.floor(Math.random() * 10), Math.floor(Math.random() * 10));
       setContainer(object, room);
    }
 

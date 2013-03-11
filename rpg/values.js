@@ -9,7 +9,9 @@ room =  {
 
 player = {
    name: "You, the player",
-   form: "player"
+   form: "player",
+   contents: [],
+   holding: undefined
 }
 
 
@@ -38,9 +40,6 @@ templates.lavender = {
    size: 3,
    density: 0,
    durability: 10,
-   consume : function(me, consumer){
-      consumer.calmness += me.calming;
-   }
 }
 
 templates.fire_pit = {
@@ -63,10 +62,10 @@ templates.water = {
    name: "water",
    material: "water",
    state: "liquid",
-   flammable: 0,
    density: 5,
    temperature: 5,
-   boilable: 6
+   boilable: 6,
+   isWater: 10
 }
 
 templates.tea_kettle = {
@@ -175,7 +174,6 @@ parameters = {
       revealed_by : [
          "alchemy_knowledge"
       ],
-      types: [ "chemical" ],
       functions : {
          "tick" : function(me)  {
             if (me.temperature > param_invert("flammable", me.flammable) && !me.burning > 0)
@@ -202,7 +200,7 @@ parameters = {
          "tick" : function(me) {
             if (me.contents !== undefined)
             {
-               if (!Array.isArray(me.contents)) console.log("Contents not array! What happened?");
+               if (!Array.isArray(me.contents)) console.log("Temperature.tick: Contents not array! What happened?");
                var total_temp = me.temperature;
                var total_items = 1;
                for (var o in me.contents)
@@ -213,11 +211,13 @@ parameters = {
                }
 
                var average_temp = total_temp / total_items;
-               me.temperature = average_temp;
+               //me.temperature = average_temp;
 
                for (var o in me.contents)
                {
-                  me.contents[o].heat = average_temp;
+                  //me.contents[o].heat = average_temp;
+                  me.contents[o].temperature = me.temperature;
+                  call(me.contents[o], "heat", me.temperature);
                }
             }
 
@@ -326,6 +326,100 @@ parameters = {
                deleteObject(me);
                updateTileText(room);
             }
+         }
+      }
+   },
+
+   soluble : {
+      values: {
+         0: "would disintigrate the moment it touched water",
+         5: "could be dissolved into water",
+         10: "could, theoretically, dissolve into water"
+      },
+      revealed_by : [
+         "alchemy_knowledge"
+      ],
+      default: 5,
+      functions : {
+         "tick" : function(me) {
+            if (me.parent !== undefined && me.parent.contents !== undefined) {
+               for (var i in me.parent.contents)
+               {
+                  if (me.parent.contents[i].state === "liquid")
+                  {
+                     if (me.parent.contents[i].temperature > me.soluble)
+                     {
+                        pushGameText(me.name + " dissolves into " + me.parent.contents[i].name);
+                        chemParams = getParamsByType(me, "chemical");
+                        for (var j in chemParams)
+                        {
+                           if (me.parent.contents[i][chemParams[j]] == undefined) {
+                              me.parent.contents[i][chemParams[j]] = 0;
+                           }
+                           me.parent.contents[i][chemParams[j]] += me[chemParams[j]];
+                        }
+                        deleteObject(me);
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }, // soluble
+
+   calming : {
+      values: {
+          0: "has no calming properties",
+          5: "has some calming properties",
+          7: "has very strong calming properties"
+      },
+      revealed_by : [
+         "alchemy_knowledge"
+      ],
+      types: [
+         "chemical"
+      ],
+      default: 0
+   }, 
+
+   isWater : {
+      functions : {
+         "tick" : function(me) {
+            var to = getTouchingObjects(me);
+            for (var i in to) {
+               if (to[i].wet === undefined) to[i].wet = 0;
+               if (to[i].wet < me.isWater) {
+                  call(to[i], "dampen", 2);
+               }
+            }
+         }
+      }
+   },
+
+   wet : {
+      values : {
+         1: "is a little damp",
+         5: "is a bit wet",
+         7: "is soaked through"
+      },
+      revealed_by : [
+         "feel", "look"
+      ],
+      functions : {
+         "tick" : function(me) {
+            if (me.temperature > 5) {
+               call(me, "dampen", -1);
+            }
+         }, 
+         "dampen" : function(me, amount) {
+            if (amount > 0) {
+               pushGameText(me.name + " gets a bit wetter.");
+            } else {
+               pushGameText(me.name + " dries out a bit.");
+            }
+
+            me.wet += amount;
+            me.flammable -= amount;
          }
       }
    }

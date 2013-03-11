@@ -81,7 +81,7 @@ h1 {
    -webkit-transition: all .25s;
    -o-transition: all .25s;
 
-   bottom: 10px;
+   /*bottom: 10px;*/
 }
 
 #tiles_container {

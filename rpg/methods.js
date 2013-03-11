@@ -7,9 +7,9 @@ function setContainer(object, container)
 {
    if (object.parent !== undefined)
    {
-      if (container.contents.indexOf(object) !== -1)
+      if (object.parent.contents.indexOf(object) !== -1)
       {
-         array.splice(array.indexOf(object), 1);
+         object.parent.contents.splice(object.parent.contents.indexOf(object), 1);
          call(object.parent, "removedObject", object);
          call(object, "leftContainer", object.parent);
       }
@@ -17,6 +17,12 @@ function setContainer(object, container)
 
    var array = container.contents;
    object.parent = container;
+
+   if (!container.isRoom)
+   {
+      object.x = container.x;
+      object.y = container.y;
+   }
 
    array.push(object);
    call(container, "addedObject", container);
@@ -28,11 +34,11 @@ function moveObject(object, x, y)
    object.x = x;
    object.y = y;
 
-   if (object.contains !== undefined)
+   if (object.contents !== undefined)
    {
-      for (var i in object.contains)
+      for (var i in object.contents)
       {
-         moveObject(object.contains[i], x, y);
+         moveObject(object.contents[i], x, y);
       }
    }
 
@@ -168,17 +174,11 @@ function splitObject(object, newsize)
 function deleteObject(object)
 {
    if (object.parent === undefined) return;
-   if (Array.isArray(object.parent))
+   var index = object.parent.contents.indexOf(object);
+   if (index != -1)
    {
-      object.parent.splice(object.parent.indexOf(object), 1);
-   } else { //must be an object
-      for (var o in object.parent)
-      {
-         if (object.parent[o] === object)
-         {
-            delete object.parent[o];
-         }
-      }
+      object.parent.contents.splice(index, 1);
+      object.isDestroyed = true;
    }
 }
 
@@ -296,6 +296,7 @@ function call(caller, method, dotdotdot)
 {
    for (var p in caller)
    {
+      if (caller.isDestroyed) return;
       if (parameters[p] !== undefined && parameters[p].functions !== undefined)
       {
          if (parameters[p].functions[method] !== undefined)
@@ -374,7 +375,7 @@ function get_param_types(param_name)
    return parameters[param_name].types;
 }
 
-function get_params_by_type(object, type)
+function getParamsByType(object, type)
 {
    var output = [];
    for (var i in object)
@@ -483,4 +484,20 @@ function createObjectFromTemplate(name)
    }
 
    return output;
+}
+
+function getTouchingObjects(object) {
+   if (object.parent === undefined) return [];
+   if (object.parent.contents !== undefined)
+   {
+      var output = [];
+
+      for (var i in object.parent.contents){
+         if (object.parent.contents[i] != object) {
+            output.push(object.parent.contents[i]);
+         }
+      }
+
+      return output;
+   }
 }
