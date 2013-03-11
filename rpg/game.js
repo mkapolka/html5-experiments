@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   lavender, tea_kettle, fire_pit, player
+   "lavender", "tea_kettle", "fire_pit",
 ];
 
 //Object that contains the data for the currently loaded room
@@ -13,9 +13,7 @@ var selected_tile = undefined;
 
 function setupRoom(width, height)
 {
-   var output = {};
-
-   output.objects = [];
+   var output = room;
 
    //Initialize data grid
    output.data = [];
@@ -76,9 +74,9 @@ function setupRoom(width, height)
 function getObjectsAt(room, x, y, contents)
 {
    var output = [];
-   for (var i in room.objects)
+   for (var i in room.contents)
    {
-      var obj = room.objects[i];
+      var obj = room.contents[i];
       if (obj.x == x && obj.y == y)
       {
          output.push(obj);
@@ -174,8 +172,7 @@ function doAction(action)
    switch (action.type)
    {
       case "Walk Here":
-         player.x = action.x;
-         player.y = action.y;
+         moveObject(player, action.x, action.y);
          pushGameText("You walk over there.");
          deselectTile(selected_tile);
       break;
@@ -306,7 +303,7 @@ function showLocationButtons(room, x, y, callback)
 function pickup(object)
 {
    pushGameText("You pick up " + object.name);
-   room.objects.splice(room.objects.indexOf(object), 1);
+   room.contents.splice(room.contents.indexOf(object), 1);
    player.holding = object;
    updateTileText(room);
 }
@@ -315,7 +312,8 @@ function putDownAt(x,y){
    if (player.holding !== undefined)
    {
       pushGameText("You put " + player.holding.name + " there.");
-      addGameObject(player.holding, room, x, y);
+      moveObject(player.holding, x, y);
+      setContainer(player.holding, room);
       player.holding = undefined;
       updateTileText(room);
    }
@@ -344,23 +342,12 @@ function updateTileText(room)
    var tiles = $(".tiles td");
    tiles.text(".");
 
-   for (var i in room.objects)
+   for (var i in room.contents)
    {
-      var object = room.objects[i];
+      var object = room.contents[i];
 
       $(room.data[object.x][object.y].cell).text(getGlyph(object));
    }
-}
-
-function addGameObject(object, room, x, y)
-{
-   if (x > room.data.length || y > room.data[0].length) {
-      return;
-   }
-   object.x = x;
-   object.y = y;
-   object.parent = room.objects;
-   room.objects.push(object);
 }
 
 function pushGameText(string)
@@ -428,9 +415,15 @@ function game_init()
 
    for (var i in room_contents)
    {
-      addGameObject(room_contents[i], room, Math.floor(Math.random () * 10), Math.floor(Math.random() * 10));
+      var object = createObjectFromTemplate(room_contents[i]);
+      object.x = Math.floor(Math.random() * 10);
+      object.y = Math.floor(Math.random() * 10);
+      setContainer(object, room);
    }
-   updateTileText(room);
 
-   //describeRoom();
+   player.x = Math.floor(Math.random() * 10);
+   player.y = Math.floor(Math.random() * 10);
+   setContainer(player, room);
+
+   updateTileText(room);
 }

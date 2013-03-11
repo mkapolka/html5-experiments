@@ -1,8 +1,19 @@
+templates = {};
+
+room =  {
+   name: "The Room",
+   form: "room",
+   contents: [],
+   isRoom: true
+}
+
 player = {
    name: "You, the player",
    form: "player"
 }
-burning_thing = {
+
+
+templates.burning_thing = {
    name: "a burning thing",
    form: "none",
    temperature: 10,
@@ -12,7 +23,7 @@ burning_thing = {
    durability: 10
 }
 
-lavender = {
+templates.lavender = {
    name: "lavender bush",
    form: "lavender",
    material: "plant",
@@ -32,7 +43,7 @@ lavender = {
    }
 }
 
-fire_pit = {
+templates.fire_pit = {
    form: "fire pit",
    name: "fire pit",
    material: "stone",
@@ -47,7 +58,7 @@ fire_pit = {
    durability: 10
 }
 
-water = {
+templates.water = {
    form: "water",
    name: "water",
    material: "water",
@@ -58,7 +69,7 @@ water = {
    boilable: 6
 }
 
-tea_kettle = {
+templates.tea_kettle = {
    form: "tea kettle",
    name: "tea kettle",
    material: "metal",
@@ -71,7 +82,7 @@ tea_kettle = {
    watertight: 9,
    openable: 10,
    temperature: 5,
-   contents : [water],
+   contents : ["water"],
    durability: 10
 }
 
@@ -180,6 +191,7 @@ parameters = {
       values: {
          0: "is ice cold",
          5: "is lukewarm",
+         7: "is quite hot",
          8: "is radiating waves of heat",
          10: "is faintly glowing with extreme heat"
       },

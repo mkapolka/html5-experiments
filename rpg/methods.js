@@ -1,17 +1,54 @@
 //The default value when a parameter doesn't define its own default value
 var DEFAULT_DEFAULT_VALUE = 5;
 
-
-function addToContainer(object, containing_object)
+//Places the object inside the container.
+//The container should be an object or room.
+function setContainer(object, container)
 {
-   containing_object.container.push(object);
-
-   //check for liquids to merge
-   if (object.state === "liquid")
+   if (object.parent !== undefined)
    {
-      container_liquids(object, containing_object);
+      if (container.contents.indexOf(object) !== -1)
+      {
+         array.splice(array.indexOf(object), 1);
+         call(object.parent, "removedObject", object);
+         call(object, "leftContainer", object.parent);
+      }
    }
+
+   var array = container.contents;
+   object.parent = container;
+
+   array.push(object);
+   call(container, "addedObject", container);
+   call(object, "enteredContainer", container);
 }
+
+function moveObject(object, x, y)
+{
+   object.x = x;
+   object.y = y;
+
+   if (object.contains !== undefined)
+   {
+      for (var i in object.contains)
+      {
+         moveObject(object.contains[i], x, y);
+      }
+   }
+
+   call(object, "move", x, y);
+}
+
+//function addToContainer(object, containing_object)
+//{
+   //containing_object.container.push(object);
+
+   ////check for liquids to merge
+   //if (object.state === "liquid")
+   //{
+      //container_liquids(object, containing_object);
+   //}
+//}
 
 function container_liquids(object, containing_object)
 {
@@ -21,37 +58,6 @@ function container_liquids(object, containing_object)
       if (other.state === "liquid")
       {
          mergeObjects(object, other, true);
-      }
-   }
-}
-
-function tick(object) {
-   if (object.temperature !== undefined)
-   {
-      temperature_tick(object);    
-   }
-}
-
-function temperature_tick(object)
-{
-   if (object.contents !== undefined)
-   {
-      if (!Array.isArray(object.contents)) console.log("Contents not array! What happened?");
-      var total_temp = object.temperature;
-      var total_items = 1;
-      for (var o in object.contents)
-      {
-         var content = object.contents[o];
-         total_temp += content.temperature; 
-         total_items += 1;
-      }
-
-      var average_temp = total_temp / total_items;
-      object.temperature = average_temp;
-
-      for (var o in object.contents)
-      {
-         object.contents[o].temperature = avarage_temp;
       }
    }
 }
@@ -118,6 +124,33 @@ function canContainerFit(object, container)
 {
    var os = object.size === undefined?1:object.size;
    return getRemainingCapacity(container) >= os;
+}
+
+//Warning: shallow copies arrays!
+function duplicateObject(object)
+{
+   var output = {};
+
+   for (var v in object)
+   {
+      switch (typeof object[v])
+      {
+         case "number":
+         case "string":
+         case "undefined":
+         case "boolean":
+         case "function":
+         case "object":
+            output[v] = object[v];
+         break;
+
+         case "array":
+            output[v] = object[v].slice();
+         break;
+      }
+   }
+
+   return output;
 }
 
 function splitObject(object, newsize)
@@ -386,7 +419,7 @@ function moveAdjacentTo(room, mover, other)
 
 function doTick(room)
 {
-   for (var i in room.objects) {
+   for (var i in room.contents) {
       function callTick(obj)
       {
          call(obj,"tick");
@@ -399,7 +432,7 @@ function doTick(room)
          }
       }
 
-      callTick(room.objects[i]);
+      callTick(room.contents[i]);
    }
 }
 
@@ -424,4 +457,30 @@ function isAdjacent(x1,y1,x2,y2)
    var dx = Math.abs(x1 - x2);
    var dy = Math.abs(y1 - y2);
    return (dx <= 1 && dy <= 1);
+}
+
+function createObjectFromTemplate(name)
+{
+   if (templates[name] === undefined) {
+      console.log("Template \"" + name + "\" does not exist!");
+      return undefined;
+   }
+
+   var output = duplicateObject(templates[name]); 
+   var objects = [];
+   var newContainer = [];
+   for (var i in output.contents)
+   {
+      var object = createObjectFromTemplate(output.contents[i]);
+      objects.push(object);
+   }
+
+   output.contents = [];
+
+   for (var i in objects)
+   {
+      setContainer(objects[i], output);
+   }
+
+   return output;
 }
