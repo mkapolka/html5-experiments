@@ -176,7 +176,6 @@ function doAction(action)
       case "Walk Here":
          player.x = action.x;
          player.y = action.y;
-         updateTileText(room);
          pushGameText("You walk over there.");
          deselectTile(selected_tile);
       break;
@@ -189,15 +188,14 @@ function doAction(action)
       break;
 
       case "Feel":
-         if (!isAdjacent(player.x, player.y, action.x, action.y)){
-            pushGameText("You cannot feel that from here! Move closer.");
+         showObjectButtons(room, action.x, action.y, function(object) {
+            if (!isAdjacent(player.x, player.y, object.x, object.y)){
+               moveAdjacentTo(room, player, object);
+            } 
+            pushGameText(revealToHTML(reveal(object, "feel")));
+            updateTileText(room);
             deselectTile(selected_tile);
-         } else {
-            showObjectButtons(room, action.x, action.y, function(object) {
-               pushGameText(revealToHTML(reveal(object, "feel")));
-               deselectTile(selected_tile);
-            });
-         }
+         });
       break;
 
       case "Wait":
@@ -205,34 +203,34 @@ function doAction(action)
       break;
 
       case "Get":
-         if (!isAdjacent(player.x, player.y, action.x, action.y)){
-            pushGameText("You cannot take that from here! Move closer.");
+         showObjectButtons(room, action.x, action.y, function(object) {
+            if (!isAdjacent(player.x, player.y, object.x, object.y)){
+               moveAdjacentTo(room, player, object);
+            } 
+            pickup(object);
+            updateTileText(room);
             deselectTile(selected_tile);
-         } else {
-            showObjectButtons(room, action.x, action.y, function(object) {
-               pickup(object);
-               deselectTile(selected_tile);
-            });
-         }
+         });
       break;
 
       case "Put":
-         if (!isAdjacent(player.x, player.y, action.x, action.y)){
-            pushGameText("You cannot put that from where you are! Move closer.");
+         showLocationButtons(room, action.x, action.y, function(object) {
+            if (!isAdjacent(player.x, player.y, object.x, object.y)){
+               moveAdjacentTo(room, player, object);
+            } 
+            if (object.isFloor) {
+               putDownAt(object.x, object.y);
+            } else {
+               putDownIn(object);
+            }
+            updateTileText(room);
             deselectTile(selected_tile);
-         } else {
-            showLocationButtons(room, action.x, action.y, function(object) {
-               if (object.isFloor) {
-                  putDownAt(object.x, object.y);
-               } else {
-                  putDownIn(object);
-               }
-            });
-         }
+         });
       break;
    }
 
    doTick(room);
+   updateTileText(room);
 }
 
 function showObjectButtons(room, x, y, callback)

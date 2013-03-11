@@ -188,10 +188,24 @@ parameters = {
       ],
       functions : {
          "tick" : function(me) {
-            if (me.contents !== undefined){
-               for (var i in me.contents)
+            if (me.contents !== undefined)
+            {
+               if (!Array.isArray(me.contents)) console.log("Contents not array! What happened?");
+               var total_temp = me.temperature;
+               var total_items = 1;
+               for (var o in me.contents)
                {
-                  call(me.contents[i], "heat", me, me.temperature);
+                  var content = me.contents[o];
+                  total_temp += content.temperature; 
+                  total_items += 1;
+               }
+
+               var average_temp = total_temp / total_items;
+               me.temperature = average_temp;
+
+               for (var o in me.contents)
+               {
+                  me.contents[o].heat = average_temp;
                }
             }
 

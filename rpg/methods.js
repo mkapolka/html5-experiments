@@ -359,6 +359,31 @@ function get_params_by_type(object, type)
    return output;
 }
 
+function moveAdjacentTo(room, mover, other)
+{
+   var ld = Number.MAX_VALUE;
+   var tx, ty;
+   for (var x = -1; x < 2; x++)
+   {
+      for (var y = -1; y < 2; y++)
+      {
+         var dx = Math.abs((other.x + x) - mover.x);
+         var dy = Math.abs((other.y + y) - mover.y);
+         if (dx + dy < ld) {
+            ld = dx + dy;
+            tx = other.x + x; 
+            ty = other.y + y;
+         }
+      }
+   }
+
+   if (tx !== undefined)
+   {
+      mover.x = tx;
+      mover.y = ty;
+   }
+}
+
 function doTick(room)
 {
    for (var i in room.objects) {
