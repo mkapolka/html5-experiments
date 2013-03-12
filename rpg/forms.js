@@ -45,6 +45,13 @@ forms = {
       watertight: 1,
       small: 1,
       hollow: 1,
+   },
+
+   "pit" : {
+      symbol: "P",
+      open: 1,
+      big: 1,
+      contents: []
    }
 }
 

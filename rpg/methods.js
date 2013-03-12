@@ -1,6 +1,30 @@
 //The default value when a parameter doesn't define its own default value
 var DEFAULT_DEFAULT_VALUE = 5;
 
+function not(value) {
+   if (value === undefined) {
+      return true;
+   } else {
+      if (typeof value == "boolean") {
+         return !value;
+      } else {
+         return value <= 0;
+      }
+   }
+}
+
+function is(value) {
+   if (value === undefined) {
+      return false;
+   } else {
+      if (typeof value === "boolean") {
+         return value;
+      } else {
+         return value > 0;
+      }
+   }
+}
+
 //Places the object inside the container.
 //The container should be an object or room.
 function setContainer(object, container)
@@ -29,6 +53,18 @@ function setContainer(object, container)
    array.push(object);
    call(container, "addedObject", container);
    call(object, "enteredContainer", container);
+}
+
+//Return true if successful, false otherwise
+function removeFromContainer(object) {
+   if (not(object.parent.isRoom)) {
+      var oldParent = object.parent;
+      setContainer(object, object.parent.parent);
+      moveObject(object, oldParent.x, oldParent.y);
+      return true;
+   }
+
+   return false;
 }
 
 function moveObject(object, x, y)
@@ -345,6 +381,14 @@ function reveal(object, method)
             }
          }
       }
+   }
+
+   //Special logic for contents
+   if (object.contents !== undefined && is(object.open)) {
+      var contents_string = "contains ";
+      var os = object.contents.map(function(v){ return v.name; });
+      contents_string += os.join(",");
+      output.push(contents_string);
    }
 
    if (props_revealed === 0)
@@ -750,4 +794,16 @@ function setSubTemplate(object, stName, stValue) {
          break;
       }
 });
+}
+
+function isVisible(object) {
+   if (is(object.parent.isRoom)) {
+      return true;
+   }
+
+   if (not(object.parent.open)) {
+      return false;   
+   }
+
+   return true;
 }

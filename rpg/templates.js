@@ -62,11 +62,9 @@ templates.poppy = {
 }
 
 templates.fire_pit = {
-   form: "fire pit",
+   form: "pit",
    name: "fire pit",
    material: "stone",
-   state: "solid",
-   big: 1,
    hot: 1,
    burning: 1,
    functions : {

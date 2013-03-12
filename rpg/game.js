@@ -307,8 +307,10 @@ function showObjectButtons(room, x, y, callback)
          for (var o2 in obj.contents)
          {
             var obj2 = obj.contents[o2];
-            names.push(obj2.name + "(inside " + obj.name + ")");
-            objects.push(obj2);
+            if (isVisible(obj2)) {
+               names.push(obj2.name + "(inside " + obj.name + ")");
+               objects.push(obj2);
+            }
          }
       }
    }

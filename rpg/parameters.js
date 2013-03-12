@@ -50,7 +50,7 @@ parameters = {
                {
                   if (Math.random() < .1)
                   {
-                     //TODO: Add jostling / object falling out logic
+                     removeFromContainer(me.contents[i]);      
                   }
                }
             }
@@ -70,7 +70,10 @@ parameters = {
       types: [ "physical" ],
       functions : {
          "tick": function(me) {
-            if (me.hot > 0) {
+            if (is(me.hot) && not(me.boiling)) {
+               if (isVisible(me)) {
+                  pushGameText(me.name + " starts to boil");
+               }
                me.boiling = 1;
             }
          }
@@ -417,10 +420,9 @@ parameters = {
       ],
       functions : {
          "tick" : function(me) {
-            if (!me.parent.watertight && !me.parent.isRoom) {
+            if (not(me.parent.watertight)) {
                setGameText(me.name + " spills out of the " + me.parent.name);
-               moveObject(me, me.parent.x, me.parent.y);
-               setContainer(me, me.parent.parent);
+               removeFromContainer(me);
             }
             var to = getTouchingObjects(me);
             for (var i in to) {
@@ -429,10 +431,9 @@ parameters = {
             }
          }, 
          "enteredContainer" : function(me, container) {
-            if (!container.watertight && !container.isRoom) {
+            if (not(container.watertight) && not(container.isRoom)) {
                pushGameText(me.name + " spills out of the " + me.parent.name);
-               moveObject(me, container.x, container.y);
-               setContainer(me, container.parent);
+               removeFromContainer(me); 
                return;
             }
 
