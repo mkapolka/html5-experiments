@@ -67,7 +67,7 @@ parameters = {
          10: "could conceivably boil"
       },
       default: 10,
-      types: [ "chemical" ],
+      types: [ "physical" ],
       functions : {
          "tick": function(me) {
             if (me.hot > 0) {
@@ -92,13 +92,16 @@ parameters = {
       }
    },
 
-   flammable: {
+   flammable : {
       values: {
          0: "is not flammable",
          1: "is flammable"
       },
       revealed_by : [
          "alchemy_knowledge"
+      ],
+      types : [
+         "physical"
       ],
       functions : {
          "burn" : function(me) {
@@ -121,6 +124,9 @@ parameters = {
       },
       revealed_by : [
          "feel"
+      ],
+      types : [
+         "physical",
       ],
       functions : {
          "tick" : function(me) {
@@ -158,6 +164,9 @@ parameters = {
       revealed_by: [
          "look","feel"
       ],
+      types : [
+         "physical",
+      ],
       functions : {
          "tick": function(me) {
             var touching = getTouchingObjects(me);
@@ -184,6 +193,9 @@ parameters = {
       revealed_by: [
          "alchemy_knowledge"
       ],
+      types : [
+         "physical",
+      ],
       default: 0,
       functions : {
          "burn" : function(me, amount) {
@@ -201,6 +213,9 @@ parameters = {
       values: {
          1: "is quite dense"
       },
+      types : [
+         "physical"
+      ],
       revealed_by: [
          "feel"
       ]
@@ -210,9 +225,32 @@ parameters = {
       values: {
          1: "is very hard",
       },
+      types : [
+         "physical"
+      ],
       revealed_by : [
          "feel"
       ]
+   },
+
+   soft: {
+      values: {
+         1: "is very soft",
+      },
+      types : [
+         "physical"
+      ],
+      revealed_by : [
+         "feel"
+      ],
+      functions : {
+         "tick" : function(me) {
+            if (me.hard > 1) {
+               me.hard = undefined;
+               me.soft = undefined;
+            }
+         }
+      }
    },
 
    big : {
@@ -276,6 +314,9 @@ parameters = {
       revealed_by : [
          "alchemy_knowledge"
       ],
+      types : [
+         "physical"
+      ],
       default: 0,
       functions : {
          "tick" : function(me) {
@@ -283,7 +324,7 @@ parameters = {
             for (t in touching) {
                if (touching[t].isLiquid > 0 && touching[t].hot > 0) {
                   pushGameText(me.name + " dissolves into " + touching[t].name);
-                  dissolve(touching[t], me, touching[t]);
+                  dissolve(me, touching[t]);
                   return;
                }
             }
@@ -293,7 +334,7 @@ parameters = {
             for (var t in touching) {
                if (touching[t].isLiquid > 0) {
                   pushGameText(me.name + " dissolves into " + touching[t].name);
-                  dissolve(touching[t], me, touching[t], "chemical");
+                  dissolve(me, touching[t]);
                   return;
                }
             }
@@ -371,15 +412,30 @@ parameters = {
       values : {
          1: "is a liquid"
       },
+      revealed_by : [
+         "look",
+      ],
       functions : {
          "tick" : function(me) {
+            if (!me.parent.watertight && !me.parent.isRoom) {
+               setGameText(me.name + " spills out of the " + me.parent.name);
+               moveObject(me, me.parent.x, me.parent.y);
+               setContainer(me, me.parent.parent);
+            }
             var to = getTouchingObjects(me);
             for (var i in to) {
                to[i].wet = 0;
                call(to[i], "dampen");
             }
          }, 
-         "enteredContainer" : function(me) {
+         "enteredContainer" : function(me, container) {
+            if (!container.watertight && !container.isRoom) {
+               pushGameText(me.name + " spills out of the " + me.parent.name);
+               moveObject(me, container.x, container.y);
+               setContainer(me, container.parent);
+               return;
+            }
+
             var touching = getTouchingObjects(me);
 
             for (var t in touching) {
@@ -435,6 +491,7 @@ parameters = {
       actionsHeld : {
            "Pour" : function(me, caller, target) {
               if (target.contents !== undefined) {
+                 pushGameText("You pour the contents of " + me.name + " into " + target.name);  
                  for (var v in me.contents) {
                     setContainer(me.contents[v], target);
                  }

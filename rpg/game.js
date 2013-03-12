@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   "lavender", "tea_kettle", "fire_pit", "chem_book", "water", "saffron", "poppy", "coriander", "tea"
+   "lavender", "tea_kettle", "fire_pit", "chem_book", "saffron", "poppy", "coriander", "tea", "collander"
 ];
 
 //Object that contains the data for the currently loaded room
@@ -293,13 +293,8 @@ function showObjectButtons(room, x, y, callback)
 {
    var names = [];
    var objects = [];
-   var objects_here = getObjectsAt(room, x, y, true);
+   var objects_here = getObjectsAt(room, x, y);
 
-   if (objects_here.length <= 1)
-   {
-      callback(objects_here[0]);
-      return;
-   }
    
    for (var o in objects_here)
    {
@@ -318,7 +313,13 @@ function showObjectButtons(room, x, y, callback)
       }
    }
 
-   var buttons = makeOptions(names, objects_here, callback);
+   if (objects.length <= 1)
+   {
+      callback(objects_here[0]);
+      return;
+   }
+
+   var buttons = makeOptions(names, objects, callback);
 
    $("#hoverbuttons").empty();
    $("#hoverbuttons").append(buttons);
@@ -352,7 +353,7 @@ function showLocationButtons(room, x, y, callback)
 
    for (var o in obAt)
    {
-      if (obAt[o].contents !== undefined)
+      if (obAt[o].contents !== undefined && obAt[o].open > 0)
       {
          names.push("Inside " + obAt[o].name);
          objects.push(obAt[o]);

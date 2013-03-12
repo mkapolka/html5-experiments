@@ -47,18 +47,6 @@ function moveObject(object, x, y)
    call(object, "move", x, y);
 }
 
-function container_liquids(object, containing_object)
-{
-   for (var i in containing_object.contents)
-   {
-      var other = containing_object.contents[i];
-      if (other.state === "liquid")
-      {
-         mergeObjects(object, other, true);
-      }
-   }
-}
-
 function open(object)
 {
    if (object.openable)
@@ -91,36 +79,39 @@ function getObjectCapacity(object)
    return Math.pow(size, 2);
 }
 
-function getRemainingCapacity(object)
+//Containers can fit up to 3 objects one size class lower than it and unlimited
+//two size classes lower
+function canContainerFit(object, container)
 {
-   if (object.contents !== undefined && Array.isArray(object.contents))
-   {
-      var capacity = getObjectCapacity(object);
+   if (container.small > 1) return false;
 
-      //Get total size of contents
-      var total_size = 0;
-      for (var c in object.contents)
-      {
-         var content = object.contents[c];
-         var cs = content.size === undefined?1:content.size;
-         total_size = cs;
+   var capacity = 3;
+
+   if (container.big > 1) {
+      for (var c in container.contents) {
+         if (!container.contents[c].small) {
+            capacity -= 1;
+         }
       }
 
-      if (total_size > capacity)
-      {
-         return 0;
-      } else {
-         return capacity - total_size;
+      return capacity >= 0;
+   }
+
+   if (!container.small) {
+      for (var c in container.contents) {
+         capacity -= 1;
       }
-   } else {
-      return undefined;
+
+      return capacity >= 0;
    }
 }
 
-function canContainerFit(object, container)
-{
-   var os = object.size === undefined?1:object.size;
-   return getRemainingCapacity(container) >= os;
+function canObjectEnter(object, container) {
+   if (!canContainerFit(object, container)) return false;
+
+   if (!container.open) {
+      return false;
+   }
 }
 
 //Warning: shallow copies arrays!

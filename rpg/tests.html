@@ -34,6 +34,12 @@
          return (out.calming == 1 && out.isLiquid == 1 && out.anaesthetic == 1);
       }
 
+      function testMultiCombine() {
+         var a = {};
+         a.calming = 1;
+         a.flammable = 1;
+      }
+
       function init() {
          runTest("Dissolve test", testDissolve);
       }

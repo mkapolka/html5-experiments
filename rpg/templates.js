@@ -87,37 +87,21 @@ templates.water = {
    density: 5,
    temperature: 5,
    boilable: 6,
-   isLiquid: 10,
+   isLiquid: 1,
    size: 5,
 }
 
+templates.collander = {
+   name: "a collander",
+   material: "metal",
+   watertight: -1,
+   contents : []
+}
+
 templates.tea_kettle = {
-   form: "tea kettle",
+   form: "kettle",
    name: "tea kettle",
    material: "metal",
    state: "solid",
-   flammable: 0,
-   density: 5,
-   hardness: 8,
-   hollow: 10,
-   size: 4,
-   watertight: 9,
-   openable: 10,
-   open: 0,
-   temperature: 5,
    contents : ["water"],
-}
-
-materials = {
-   "plant" : {
-      flammable : 7,
-      phlogiston: 10,
-      density: 3
-   },
-   "wood" : {
-      flammable: 8,
-      phlogiston: 10,
-      density: 4,
-      watertight: 10,
-   }
 }

@@ -39,7 +39,12 @@ forms = {
    },
 
    "kettle" : {
-      symbol: "K"
+      symbol: "K",
+      openable: 1,
+      open: 1,
+      watertight: 1,
+      small: 1,
+      hollow: 1,
    }
 }
 
@@ -51,5 +56,11 @@ materials = {
    "wood" : {
       flammable: 1,
       phlogiston: 1,
+   },
+   "metal" : {
+      flammable: -1,
+      watertight: 1,
+      dense: 1,
+      hard: 1
    }
 }
