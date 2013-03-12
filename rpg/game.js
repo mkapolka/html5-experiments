@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   "lavender", "tea_kettle", "fire_pit", "chem_book", "water"
+   "lavender", "tea_kettle", "fire_pit", "chem_book", "water", "saffron", "poppy", "coriander", "tea"
 ];
 
 //Object that contains the data for the currently loaded room
@@ -372,6 +372,12 @@ function pickup(object)
       pushGameText("You are already holding " + player.holding.name + ", you cannot pick up " + object.name + "!");
       return;
    }
+
+   if (object.big > 0) {
+      pushGameText("That is too big to carry!");
+      return;
+   }
+
    pushGameText("You pick up " + object.name);
    setContainer(object, player);
    player.holding = object;
@@ -489,6 +495,7 @@ function game_init()
       setContainer(object, room);
    }
 
+   player = createObjectFromTemplate("player");
    player.x = Math.floor(Math.random() * 10);
    player.y = Math.floor(Math.random() * 10);
    setContainer(player, room);

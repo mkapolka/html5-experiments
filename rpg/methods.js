@@ -166,12 +166,6 @@ function deleteObject(object)
 {
    if (object.parent === undefined) return;
    setContainer(object, undefined);
-   //var index = object.parent.contents.indexOf(object);
-   //if (index != -1)
-   //{
-      //object.parent.contents.splice(index, 1);
-      //object.isDestroyed = true;
-   //}
 }
 
 //Merges objects
@@ -241,6 +235,31 @@ function combineByType(output, objectA, objectB, type, callback) {
       output[i] = callback(objectA, objectB, i, typeof parms[i]);
    }
 
+   return output;
+}
+
+//Dissolve a into b, transferring any properties with type 'type'
+function dissolve(output, objectA, objectB, type) {
+   output = combineByType(output, objectA, objectB, type, function(a, b, param, type) {
+      switch (type) {
+         case "number":
+            if (a[param] === undefined) {
+               return b[param];
+            }
+            if (b[param] === undefined) {
+               return a[param];
+            }
+            return Math.max(a[param] , b[param]);
+         break;
+
+         default:
+            return a[param];
+         break;
+      }
+   });
+
+   deleteObject(objectA);
+   
    return output;
 }
 
@@ -512,9 +531,9 @@ function doTick(room)
 function getGlyph(object)
 {
    if (object === undefined) return ".";
-   if (object.form !== undefined && forms[object.form] !== undefined)
+   if (object.form !== undefined)
    {
-      return forms[object.form].symbol;
+      return object.form.symbol;
    }
 
    return object.name.charAt(0).toUpperCase();
@@ -554,19 +573,21 @@ function createObjectFromTemplate(name)
    output.material = undefined;
    setMaterial(output, material);
 
-   var objects = [];
-   var newContainer = [];
-   for (var i in output.contents)
-   {
-      var object = createObjectFromTemplate(output.contents[i]);
-      objects.push(object);
-   }
+   if (output.contents !== undefined) {
+      var objects = [];
+      var newContainer = [];
+      for (var i in output.contents)
+      {
+         var object = createObjectFromTemplate(output.contents[i]);
+         objects.push(object);
+      }
 
-   output.contents = [];
+      output.contents = [];
 
-   for (var i in objects)
-   {
-      setContainer(objects[i], output);
+      for (var i in objects)
+      {
+         setContainer(objects[i], output);
+      }
    }
 
    return output;
