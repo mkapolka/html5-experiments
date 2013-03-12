@@ -14,15 +14,11 @@ player = {
    holding: undefined
 }
 
-
-templates.burning_thing = {
-   name: "a burning thing",
-   form: "none",
-   temperature: 10,
-   flammable: 5,
-   burning: 5,
-   phlogiston: 10,
-   durability: 10
+templates.chem_book = {
+   name : "a chemistry textbook",
+   form : "book",
+   material : "paper",
+   revealType: "alchemy_knowledge"
 }
 
 templates.lavender = {
@@ -40,6 +36,15 @@ templates.lavender = {
    size: 3,
    density: 0,
    durability: 10,
+   actionsStanding : {
+      "Pinch" : function(me, caller) {
+         moveAdjacentTo(caller, me);  
+         pushGameText("You pinch off a sprig of " + me.name);
+         var dup = duplicateObject(me);
+         dup.size = 1;
+         setContainer(dup, room);
+      }
+   }
 }
 
 templates.fire_pit = {
@@ -427,12 +432,34 @@ parameters = {
 
 forms = {
    "player" : {
-      name: "player",
       symbol: "@",
       actions : {
          "move" : {
             
          }
       }
+   },
+
+   "book" : {
+      symbol: "B",
+      phlogiston: 10,
+      durability: 10,
+      size: 2,
+      actionsHeld : {
+         "Cross Reference" : function(me, caller, target) {
+            if (target === undefined) return;
+            moveAdjacentTo(caller, target);
+            pushGameText("You rifle through the pages, searching for information about " + target.name + 
+            revealToHTML(reveal(target, me.revealType)));
+         }
+      }
+   }
+}
+
+materials = {
+   "plant" : {
+      flammable : 10,
+      phlogiston: 10,
+      density: 3
    }
 }

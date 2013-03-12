@@ -393,7 +393,7 @@ function getParamsByType(object, type)
    return output;
 }
 
-function moveAdjacentTo(room, mover, other)
+function moveAdjacentTo(mover, other)
 {
    var ld = Number.MAX_VALUE;
    var tx, ty;
@@ -468,6 +468,20 @@ function createObjectFromTemplate(name)
    }
 
    var output = duplicateObject(templates[name]); 
+
+   //Set form
+   //expects a string here
+   var form = output.form;
+   //set undefined here so that it doesn't try to remove the old values
+   output.form = undefined;
+   setForm(output, form);
+
+   //set material (same as form)
+   var material = output.material;
+   //set undefined here so that it doesn't try to remove the old values
+   output.material = undefined;
+   setMaterial(output, material);
+
    var objects = [];
    var newContainer = [];
    for (var i in output.contents)
@@ -500,4 +514,126 @@ function getTouchingObjects(object) {
 
       return output;
    }
+}
+
+//Actions that can be performed on an object when the player is holding it
+function getHeldActions(object) {
+   if (object.actionsHeld === undefined) return {};
+   return object.actionsHeld;
+}
+
+//Actions that can be performed on an object while it's hanging out
+//in the game world
+function getStandingActions(object) {
+   if (object.actionsStanding === undefined) return {};
+   return object.actionsStanding;
+}
+
+function objectCombine(objectTo, objectFrom, callback) {
+   for (var o in objectFrom) {
+      objectTo[o] = callback(objectFrom[o], objectTo[o]);
+   }
+}
+
+function setForm(object, form) {
+   //accept either string or object form
+   if (typeof form === "string") {
+      var fn = form;
+      form = forms[form];
+      //Cannot continue if cannot find form data
+      if (form === undefined) {
+         console.log("Couldn't find data for form: " + fn);
+         return;
+      };
+   }
+
+   setSubTemplate(object, "form", form);
+}
+
+function setMaterial(object, material) {
+   //accept either string or object material
+   if (typeof material === "string") {
+      var fn = material;
+      material = materials[material];
+      //Cannot continue if cannot find material data
+      if (material === undefined) {
+         console.log("Couldn't find data for material: " + fn);
+         return;
+      };
+   }
+
+   setSubTemplate(object, "material", material);
+}
+
+//Sets a sub-template. This is for things like forms and materials that
+//allow an object to inherit several properties
+function setSubTemplate(object, stName, stValue) {
+
+   //Subtract the old values
+   if (object[stName] !== undefined) {
+      objectCombine(object, object[stName], function(a, b) {
+         switch (typeof b) {
+            case "number":
+               if (a === undefined) a = 0;
+               return a-b;
+            break;
+
+            case "array":
+               if (a === undefined) a = [];
+               for (var i in b) {
+                  if (a.indexOf(b[i]) !== -1) {
+                     a.splice(a.indexOf(b[i]), 1);
+                  }
+               }
+               return a;
+            break;
+
+            case "object":
+               if (a === undefined) a = {};
+               for (var i in b) {
+                  delete a[i];
+               }
+               return a;
+            break;
+
+            default:
+               return a;
+            break;
+         }
+      });
+   }
+
+   //Remove any events
+
+   object[stName] = stValue;
+
+   //Add the new values
+   objectCombine(object, object[stName], function(a, b) {
+      switch (typeof b) {
+         case "number":
+            if (a === undefined) a = 0;
+            return a+b;
+         break;
+
+         case "array":
+            if (a === undefined) a = [];
+            for (var i in b) {
+               a.push(b[i]);
+            }
+            return a;
+         break;
+
+         case "object":
+            if (a === undefined) a = {};
+            for (var i in b) {
+               a[i] = b[i];
+            }
+            return a;
+         break;
+
+         default:
+            return a;
+         break;
+      }
+});
 }

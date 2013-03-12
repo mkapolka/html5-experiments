@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   "lavender", "tea_kettle", "fire_pit",
+   "lavender", "tea_kettle", "fire_pit", "chem_book"
 ];
 
 //Object that contains the data for the currently loaded room
@@ -142,11 +142,27 @@ function showActionButtons(room, x, y)
       actions.push("Get");
       actions.push("Look");
       actions.push("Feel");
+
+      for (var o in objects_here) {
+         var standingActions = getStandingActions(objects_here[o]);
+         for (var a in standingActions) {
+            if (actions.indexOf(a) === -1){
+               actions.push(a);
+            }
+         }
+      }
    }
 
    if (player.holding !== undefined)
    {
       actions.push("Put");
+
+      //Held object actions
+      var heldActions = getHeldActions(player.holding);
+
+      for (var a in heldActions) {
+         actions.push(a);
+      }
    }
 
    //Player specific actions
@@ -187,10 +203,9 @@ function doAction(action)
       case "Feel":
          showObjectButtons(room, action.x, action.y, function(object) {
             if (!isAdjacent(player.x, player.y, object.x, object.y)){
-               moveAdjacentTo(room, player, object);
+               moveAdjacentTo(player, object);
             } 
             pushGameText(revealToHTML(reveal(object, "feel")));
-            pushGameText(revealToHTML(reveal(object, "alchemy_knowledge")));
             updateTileText(room);
             deselectTile(selected_tile);
          });
@@ -203,7 +218,7 @@ function doAction(action)
       case "Get":
          showObjectButtons(room, action.x, action.y, function(object) {
             if (!isAdjacent(player.x, player.y, object.x, object.y)){
-               moveAdjacentTo(room, player, object);
+               moveAdjacentTo(player, object);
             } 
             pickup(object);
             updateTileText(room);
@@ -214,7 +229,7 @@ function doAction(action)
       case "Put":
          showLocationButtons(room, action.x, action.y, function(object) {
             if (!isAdjacent(player.x, player.y, object.x, object.y)){
-               moveAdjacentTo(room, player, object);
+               moveAdjacentTo(player, object);
             } 
             if (object.isFloor) {
                putDownAt(object.x, object.y);
@@ -224,6 +239,46 @@ function doAction(action)
             updateTileText(room);
             deselectTile(selected_tile);
          });
+      break;
+
+      default:
+         //Was it an action from an object the player is holding?
+         if (player.holding !== undefined) {
+            var heldActions = getHeldActions(player.holding);
+
+            if (heldActions[action.type] !== undefined) {
+               showObjectButtons(room, action.x, action.y, function(object) {
+                  heldActions[action.type](player.holding, player, object);
+                  updateTileText(room);
+                  deselectTile(selected_tile);
+               });
+            }
+
+            return;
+         }
+
+         //Standing action
+         var object = undefined;
+         var objectsHere = getObjectsAt(room, action.x, action.y, false);
+         var names = [];
+         var objects = [];
+         
+         for (var o in objectsHere) {
+            var actions = getStandingActions(objectsHere[o]);
+            if (actions[action.type] !== undefined) {
+               names.push(objectsHere[o].name); 
+               objects.push(objectsHere[o]);
+            }
+         }
+
+         if (names.length > 1) {
+            showOptions(names, objects, function(object) {
+               object.actionsStanding[action.type](object, player); 
+            });
+         } else {
+            if (objectsHere.length == 0) return;
+            objectsHere[0].actionsStanding[action.type](objectsHere[0], player);
+         }
       break;
    }
 
@@ -237,7 +292,7 @@ function showObjectButtons(room, x, y, callback)
    var objects = [];
    var objects_here = getObjectsAt(room, x, y, true);
 
-   if (objects_here.length == 1)
+   if (objects_here.length <= 1)
    {
       callback(objects_here[0]);
       return;
@@ -261,6 +316,13 @@ function showObjectButtons(room, x, y, callback)
    }
 
    var buttons = makeOptions(names, objects_here, callback);
+
+   $("#hoverbuttons").empty();
+   $("#hoverbuttons").append(buttons);
+}
+
+function showOptions(names, objects, callback) {
+   var buttons = makeOptions(names, objects, callback);
 
    $("#hoverbuttons").empty();
    $("#hoverbuttons").append(buttons);
