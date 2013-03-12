@@ -1,3 +1,7 @@
+/*
+Parameters.js is for storing all the information in the "parameters" global - 
+how parameters should be named, what their actions are, etc.
+*/
 parameters = {
    //Something that is openable has some sort of latch or lid
    //that can be manipulated in order to open it
@@ -279,7 +283,7 @@ parameters = {
             for (t in touching) {
                if (touching[t].isLiquid > 0 && touching[t].hot > 0) {
                   pushGameText(me.name + " dissolves into " + touching[t].name);
-                  dissolve(touching[t], me, touching[t], "chemical");
+                  dissolve(touching[t], me, touching[t]);
                   return;
                }
             }

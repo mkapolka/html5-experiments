@@ -221,8 +221,17 @@ function combineObjects(output, objectA, objectB, callback) {
 function combineByType(output, objectA, objectB, type, callback) {
    var parms = {};
 
-   var paramsA = getParamsByType(objectA, type);
-   var paramsB = getParamsByType(objectB, type);
+   var paramsA = [];
+   var paramsB = [];
+   if (typeof type === "array") {
+      for (var a in type) {
+         paramsA = paramsA.join(getParamsByType(objectA, type[a]));
+         paramsB = paramsB.join(getParamsByType(objectB, type[a]));
+      }
+   } else {
+      paramsA = getParamsByType(objectA, type);
+      paramsB = getParamsByType(objectB, type);
+   }
 
    for (var i in paramsA) {
       parms[paramsA[i]] = typeof objectA[paramsA[i]];
@@ -232,15 +241,15 @@ function combineByType(output, objectA, objectB, type, callback) {
    }
 
    for (var i in parms) {
-      output[i] = callback(objectA, objectB, i, typeof parms[i]);
+      output[i] = callback(objectA, objectB, i, parms[i]);
    }
 
    return output;
 }
 
 //Dissolve a into b, transferring any properties with type 'type'
-function dissolve(output, objectA, objectB, type) {
-   output = combineByType(output, objectA, objectB, type, function(a, b, param, type) {
+function dissolve(objectA, objectB) {
+   output = combineByType(objectB, objectA, objectB, "chemical", function(a, b, param, type) {
       switch (type) {
          case "number":
             if (a[param] === undefined) {
@@ -260,7 +269,7 @@ function dissolve(output, objectA, objectB, type) {
 
    deleteObject(objectA);
    
-   return output;
+   return objectB;
 }
 
 //When two liquids meet this is the method that should be called
