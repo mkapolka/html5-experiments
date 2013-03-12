@@ -15,6 +15,8 @@ function setContainer(object, container)
       }
    }
 
+   if (container === undefined) return;
+
    var array = container.contents;
    object.parent = container;
 
@@ -44,17 +46,6 @@ function moveObject(object, x, y)
 
    call(object, "move", x, y);
 }
-
-//function addToContainer(object, containing_object)
-//{
-   //containing_object.container.push(object);
-
-   ////check for liquids to merge
-   //if (object.state === "liquid")
-   //{
-      //container_liquids(object, containing_object);
-   //}
-//}
 
 function container_liquids(object, containing_object)
 {
@@ -174,14 +165,16 @@ function splitObject(object, newsize)
 function deleteObject(object)
 {
    if (object.parent === undefined) return;
-   var index = object.parent.contents.indexOf(object);
-   if (index != -1)
-   {
-      object.parent.contents.splice(index, 1);
-      object.isDestroyed = true;
-   }
+   setContainer(object, undefined);
+   //var index = object.parent.contents.indexOf(object);
+   //if (index != -1)
+   //{
+      //object.parent.contents.splice(index, 1);
+      //object.isDestroyed = true;
+   //}
 }
 
+//Merges objects
 function mergeObjects(object_a, object_b, add_size)
 {
    for (var k in object_b)
@@ -208,6 +201,84 @@ function mergeObjects(object_a, object_b, add_size)
    {
       object_a.size += object_b.size;
    }
+}
+
+//Combines two object and returns the result
+//Callback is a method that takes the form (objectA, objectB, propertyName, typeof)
+//and returns the value of propertyName that the output should have
+function combineObjects(output, objectA, objectB, callback) {
+   var parms = {};
+   for (var i in objectA) {
+      parms[i] = typeof(objectA[i]);
+   }
+   for (var i in objectB) {
+      parms[i] = typeof(objectB[i]);
+   }
+
+   for (var i in parms) {
+      output[i] = callback(objectA, objectB, i, parms[i]);
+   }
+
+   return output;
+}
+
+//Combines two objects, but only the parameters that match a certain type
+//Callback takes the form function(objectA, objectB, propertyName, typeof)
+function combineByType(output, objectA, objectB, type, callback) {
+   var parms = {};
+
+   var paramsA = getParamsByType(objectA, type);
+   var paramsB = getParamsByType(objectB, type);
+
+   for (var i in paramsA) {
+      parms[paramsA[i]] = typeof objectA[paramsA[i]];
+   }
+   for (var i in paramsB) {
+      parms[paramsB[i]] = typeof objectB[paramsB[i]];
+   }
+
+   for (var i in parms) {
+      output[i] = callback(objectA, objectB, i, typeof parms[i]);
+   }
+
+   return output;
+}
+
+//When two liquids meet this is the method that should be called
+function combineLiquids(objectA, objectB) {
+   var s1 = Math.pow(paramSafeGet(objectA, "size"), 3);
+   var s2 = Math.pow(paramSafeGet(objectB, "size"), 3);
+   if (s1 > s2) {
+      ratio = s2 / s1;
+   } else {
+      ratio = s1 / s2;
+
+      var b = objectB;
+      objectB = objectA;
+      objectA = b;
+   }
+   objectA.temp = {};
+   objectA.temp.s1 = s1;
+   objectA.temp.s2 = s2;
+   objectA.temp.ratio = ratio;
+
+   //ObjA should always be the larger one
+   var output = combineObjects(objectA, objectB, function(objA, objB, prop, type) {
+      if (prop == "size") {
+         return Math.pow(objA.temp.s1 + objA.temp.s2, 1/3);
+      }
+      switch (type) {
+         case "number":
+            return (objA[prop] * (1 - ratio)) + (objB[prop] * ratio);
+         break;
+
+         default:
+            return objA[prop];
+         break;
+      }
+   });
+
+   return output;
 }
 
 function submerge(liquid, submersed)
@@ -333,7 +404,7 @@ function call(caller, method, dotdotdot)
    }
 }
 
-function param_invert(param_name, value)
+function paramInvert(param_name, value)
 {
    if (parameters[param_name] !== undefined && parameters[param_name].max_value !== undefined)
    {
@@ -343,7 +414,7 @@ function param_invert(param_name, value)
    return 10 - value;
 }
 
-function param_safe_get(who, param_name)
+function paramSafeGet(who, param_name)
 {
    if (who[param_name] !== undefined)
    {
@@ -375,6 +446,7 @@ function get_param_types(param_name)
    return parameters[param_name].types;
 }
 
+//Returns an array of strings
 function getParamsByType(object, type)
 {
    var output = [];
@@ -502,6 +574,7 @@ function createObjectFromTemplate(name)
 
 function getTouchingObjects(object) {
    if (object.parent === undefined) return [];
+   if (object.parent.isRoom) return [];
    if (object.parent.contents !== undefined)
    {
       var output = [];
@@ -518,15 +591,35 @@ function getTouchingObjects(object) {
 
 //Actions that can be performed on an object when the player is holding it
 function getHeldActions(object) {
-   if (object.actionsHeld === undefined) return {};
-   return object.actionsHeld;
+   var output = {};
+   for (var a in object.actionsHeld) {
+      output[a] = object.actionsHeld[a];
+   }
+   for (var i in object) {
+      if (parameters[i] !== undefined && parameters[i].actionsHeld !== undefined){
+         for (var a in parameters[i].actionsHeld) {
+            output[a] = parameters[i].actionsHeld[a];
+         }
+      }
+   }
+   return output;
 }
 
 //Actions that can be performed on an object while it's hanging out
 //in the game world
 function getStandingActions(object) {
-   if (object.actionsStanding === undefined) return {};
-   return object.actionsStanding;
+   var output = {};
+   for (var a in object.actionsStanding) {
+      output[a] = object.actionsStanding[a];
+   }
+   for (var i in object) {
+      if (parameters[i] !== undefined && parameters[i].actionsStanding !== undefined){
+         for (var a in parameters[i].actionsStanding) {
+            output[a] = parameters[i].actionsStanding[a];
+         }
+      }
+   }
+   return output;
 }
 
 function objectCombine(objectTo, objectFrom, callback) {

@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   "lavender", "tea_kettle", "fire_pit", "chem_book"
+   "lavender", "tea_kettle", "fire_pit", "chem_book", "water"
 ];
 
 //Object that contains the data for the currently loaded room
@@ -277,7 +277,10 @@ function doAction(action)
             });
          } else {
             if (objectsHere.length == 0) return;
-            objectsHere[0].actionsStanding[action.type](objectsHere[0], player);
+            var standingActions = getStandingActions(objectsHere[0]);
+            standingActions[action.type](objectsHere[0], player);
+            updateTileText(room);
+            deselectTile(selected_tile);
          }
       break;
    }

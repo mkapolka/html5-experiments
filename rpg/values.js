@@ -23,7 +23,7 @@ templates.chem_book = {
 
 templates.lavender = {
    name: "lavender bush",
-   form: "lavender",
+   form: "bush",
    material: "plant",
    state: "solid",
    flammable: 3,
@@ -35,16 +35,7 @@ templates.lavender = {
    soluble: 7,
    size: 3,
    density: 0,
-   durability: 10,
-   actionsStanding : {
-      "Pinch" : function(me, caller) {
-         moveAdjacentTo(caller, me);  
-         pushGameText("You pinch off a sprig of " + me.name);
-         var dup = duplicateObject(me);
-         dup.size = 1;
-         setContainer(dup, room);
-      }
-   }
+   durability: 10
 }
 
 templates.fire_pit = {
@@ -70,7 +61,8 @@ templates.water = {
    density: 5,
    temperature: 5,
    boilable: 6,
-   isWater: 10
+   isLiquid: 10,
+   size: 5,
 }
 
 templates.tea_kettle = {
@@ -85,41 +77,51 @@ templates.tea_kettle = {
    size: 4,
    watertight: 9,
    openable: 10,
+   open: 0,
    temperature: 5,
    contents : ["water"],
    durability: 10
 }
 
 parameters = {
+   //Something that is openable has some sort of latch or lid
+   //that can be manipulated in order to open it
    openable : {
       values: {
          1: "can be opened",
       },
       default: 0,
       types: ["mechanical"],
-      functions : {
-         "open" : function(me) {
-            if (me.opened === undefined || me.opened < 1)
+      actionsStanding : {
+         "Open" : function(me, caller) {
+            moveAdjacentTo(caller, me);
+            if (me.open === undefined || me.open < 1)
             {
-               pushGameText(me.name + " was opened");
-               me.open = 1;
+               pushGameText("You open the " + me.name);
+               me.open += openable;
             }
          },
-         "close" : function(me) {
-            if (me.opened !== undefined || me.opened > 0)
+         "Close" : function(me, caller) {
+            moveAdjacentTo(caller, me);
+            if (me.open > 0)
             {
-               pushGameText(me.name + " was closed");
-               me.open = undefined;
+               pushGameText("You close the " + me.name);
+               me.open -= openable;
             }
          }
       }
    },
 
+   //Something that is open has its contents exposed with nothing in between
+   //the value represents the size of the largest hole
    open : {
       values : {
          0: "is closed",
          1: "is open"
       },
+      revealed_by: [
+         "look"
+      ],
       types: ["mechanical"],
       functions : {
          "jostle" : function(me, jostler, force) {
@@ -137,6 +139,7 @@ parameters = {
       }//functions
    },
 
+   //Object can be boiled. Higher value = requires more heat
    boilable: {
       values: {
          0: "would boil at room temperature",
@@ -148,8 +151,8 @@ parameters = {
       types: [ "chemical" ],
       functions : {
          "tick": function(me) {
-            var temp = param_safe_get(me, "temperature");
-            var boiling = param_safe_get(me, "boiling");
+            var temp = paramSafeGet(me, "temperature");
+            var boiling = paramSafeGet(me, "boiling");
             if (temp > me.boilable && boiling <= 1)
             {
                pushGameText(me.name + " started boiling!");
@@ -180,9 +183,8 @@ parameters = {
          "alchemy_knowledge"
       ],
       functions : {
-         "tick" : function(me)  {
-            if (me.temperature > param_invert("flammable", me.flammable) && !me.burning > 0)
-            {
+         "burn" : function(me, caller, amount) {
+            if (amount > paramInvert("flammable", me.flammable) && !me.burning > 0) {
                pushGameText("The " + me.name + " bursts into flames!");
                me.burning = me.flammable;
             }
@@ -205,36 +207,23 @@ parameters = {
          "tick" : function(me) {
             if (me.contents !== undefined)
             {
-               if (!Array.isArray(me.contents)) console.log("Temperature.tick: Contents not array! What happened?");
-               var total_temp = me.temperature;
-               var total_items = 1;
-               for (var o in me.contents)
-               {
-                  var content = me.contents[o];
-                  total_temp += content.temperature; 
-                  total_items += 1;
-               }
-
-               var average_temp = total_temp / total_items;
-               //me.temperature = average_temp;
-
-               for (var o in me.contents)
-               {
-                  //me.contents[o].heat = average_temp;
-                  me.contents[o].temperature = me.temperature;
+               for (var o in me.contents) {
                   call(me.contents[o], "heat", me.temperature);
                }
             }
 
             if (me.parent !== undefined)
             {
+               //Heat parents less accoring to scale
                call(me.parent, "heat", me, me.temperature);
             }
          }, 
          "heat" : function(me, caller, amount) {
+            console.log(me.name, amount);
             if (me === caller) return;
             if (me.temperature < amount) {
-               me.temperature = amount;
+               console.log("heating");
+               me.temperature += (amount - me.temperature) * .5;
             }
          }
       }
@@ -251,7 +240,18 @@ parameters = {
       ],
       functions : {
          "tick": function(me) {
+            var touching = getTouchingObjects(me);
+            for (var i in touching) {
+               call(touching[i], "burn", me.burning);
+            }
+
             call(me, "burn", me.burning);
+            
+            me.burning -= 1;
+
+            if (me.burning <= 0) {
+               pushGameText(me.name + "'s flames die out");
+            }
          }
       }
    },
@@ -268,7 +268,7 @@ parameters = {
       default: 0,
       functions : {
          "burn" : function(me, amount) {
-            var phlog = param_safe_get(me, "phlogiston") * .1;
+            var phlog = paramSafeGet(me, "phlogiston") * .1;
             call(me, "damage", amount * phlog);
          }
       }
@@ -347,27 +347,28 @@ parameters = {
       default: 5,
       functions : {
          "tick" : function(me) {
-            if (me.parent !== undefined && me.parent.contents !== undefined) {
-               for (var i in me.parent.contents)
-               {
-                  if (me.parent.contents[i].state === "liquid")
-                  {
-                     if (me.parent.contents[i].temperature > me.soluble)
-                     {
-                        pushGameText(me.name + " dissolves into " + me.parent.contents[i].name);
-                        chemParams = getParamsByType(me, "chemical");
-                        for (var j in chemParams)
-                        {
-                           if (me.parent.contents[i][chemParams[j]] == undefined) {
-                              me.parent.contents[i][chemParams[j]] = 0;
-                           }
-                           me.parent.contents[i][chemParams[j]] += me[chemParams[j]];
-                        }
-                        deleteObject(me);
+            var touching = getTouchingObjects(me);
+            for (t in touching) {
+               if (touching[t].isLiquid > 0 && paramSafeGet(touching[t],"temperature") > me.soluble) {
+                  pushGameText(me.name + " dissolves into " + touching[t].name);
+                  combineByType(touching[t], touching[t], me, "chemical", function(a, b, param, type) {
+                     switch (type) {
+                        case "number":
+                           return a[param] + b[param];
+                        break;
+
+                        case "string":
+                           return b[param];
+                        break;
                      }
-                  }
+                  });
+                  deleteObject(me);
+                  return;
                }
             }
+         },
+         "jostle" : function(me, jostler, amount) {
+            
          }
       }
    }, // soluble
@@ -387,7 +388,7 @@ parameters = {
       default: 0
    }, 
 
-   isWater : {
+   isLiquid : {
       functions : {
          "tick" : function(me) {
             var to = getTouchingObjects(me);
@@ -395,6 +396,19 @@ parameters = {
                if (to[i].wet === undefined) to[i].wet = 0;
                if (to[i].wet < me.isWater) {
                   call(to[i], "dampen", 2);
+               }
+            }
+         }, 
+         "enteredContainer" : function(me) {
+            var touching = getTouchingObjects(me);
+
+            for (var t in touching) {
+               if (touching[t].isLiquid > 0) {
+                  var combined = combineLiquids(me, touching[t]);
+                  deleteObject(me);
+                  deleteObject(touching[t]);
+                  setContainer(combined, me.parent);
+                  return;
                }
             }
          }
@@ -453,13 +467,32 @@ forms = {
             revealToHTML(reveal(target, me.revealType)));
          }
       }
+   },
+
+   "bush" : {
+      actionsStanding : {
+         "Pinch" : function(me, caller) {
+            moveAdjacentTo(caller, me);  
+            pushGameText("You pinch off a sprig of " + me.name);
+            var dup = duplicateObject(me);
+            dup.name = "a sprig from " + me.name;
+            dup.size = 1;
+            setContainer(dup, room);
+         }
+      }
    }
 }
 
 materials = {
    "plant" : {
-      flammable : 10,
+      flammable : 7,
       phlogiston: 10,
       density: 3
+   },
+   "wood" : {
+      flammable: 8,
+      phlogiston: 10,
+      density: 4,
+      watertight: 10,
    }
 }
