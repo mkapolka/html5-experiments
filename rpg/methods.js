@@ -841,6 +841,8 @@ function eat(who, target) {
    call(who, "eat", target);
 
    var eaten = false;
+   //Put the object into the creature's stomach
+   //and inform all its elements
    for (var v in who.contents) {
       if (is(who.contents[v].digesting)) {
          setContainer(target, who.contents[v]);
@@ -911,4 +913,40 @@ function getPronoun(object, type) {
          break;
       }
    }
+}
+
+//Removes the specified object from this array, in place.
+//WARNING: Does not preserve order
+function arrayRemove(array, object) {
+   var index = array.indexOf(object);
+   if (index === -1) return;
+   var t = array[0];
+   array[0] = object;
+   array[index] = t;
+   array.shift();
+}
+
+function pickRandom(array) {
+   if (array === undefined) return undefined;
+
+   //Array is actually an object, convert to array
+   var a;
+   if (array.length === undefined) {
+      a = [];
+      for (var v in array) {
+         a.push(array[v]);
+      }
+   } else {
+      a = array;
+   }
+
+   if (a.length === 0) return undefined;
+
+   return (a[Math.floor(Math.random() * a.length)]);
+}
+
+function getBrainOwner(brain) {
+   if (!(brain.parent)) return undefined;
+   if (not(brain.parent.animated)) return undefined;
+   return brain.parent;
 }

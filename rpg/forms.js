@@ -1,8 +1,28 @@
 forms = {
    "person" : {
       symbol: "@",
-      hungry: 0,
-      big: 1
+      big: 1,
+      animated: 1,
+      mobile: 1,
+   },
+
+   "cat" : {
+      symbol: "C",
+      contents : ["catBrain", "catHeart", "blood", "catStomach"],
+      holding: undefined,
+      clawed: 1,
+      animated: 1,
+      mobile: 1,
+   },
+
+   "mouse" : {
+      symbol: "M",
+      contents: ["mouseBrain", "mouseHeart", "blood"],
+      small: 1,
+      living: -1,
+      soft: 1,
+      animated: 1,
+      mobile: 1,
    },
 
    "book" : {
@@ -57,28 +77,12 @@ forms = {
       isLiquid: 1
    },
 
-   "cat" : {
-      symbol: "C",
-      contents : ["catBrain", "catHeart", "blood", "catStomach"],
-      hungry: 1,
-      holding: undefined,
-      clawed: 1,
-      edible: 1
-   },
-
-   "mouse" : {
-      symbol: "M",
-      contents: ["mouseBrain", "mouseHeart", "blood"],
-      small: 1,
-      living: -1,
-      hungry: 0,
-      soft: 1
-   },
 
    "brain" : {
       symbol: "B",
       sentient: 1,
       conscious: 1,
+      satiable: 1
    },
 
    "heart" : {
@@ -93,6 +97,10 @@ forms = {
       gagReflex: 1,
       sated: 0
    },
+
+   "mouse_hole" : {
+      spawnsMice : 1,
+   }
 }
 
 materials = {

@@ -600,6 +600,7 @@ parameters = {
          "look"
       ],
       values : function(value) {
+         if (value === undefined) return "";
          if (value.name !== undefined) {
             return "is made of " + value.name;
          } else {
@@ -775,40 +776,6 @@ parameters = {
       }
    },
 
-   hungry : {
-      values: {
-         1: "is hungry",
-      },
-      revealed_by : [
-         "psychology_knowledge", "look",
-      ],
-      functions : {
-         "tick" : function(me) {
-            if (is(me.hungry)) {
-               if (Math.random() < .5) {
-                  call(me, "anger");
-               }
-            } else {
-               if (Math.random() < .1) {
-                  call(me, "hunger");
-               }
-            }
-         },
-         "hunger" : function(me) {
-            if (not(me.hungry)) {
-               if (isVisible(me)) {
-                  pushGameText(me.name + "'s stomach growls");
-               }
-               me.hungry = 1;
-            }
-         },
-         "eat" : function(me) {
-            if (is(me.hungry)) {
-               me.hungry = 0;
-            }
-         }
-      }
-   },
 
    //Remember that this will typically be a property of stomachs
    //so if you want to do something to the creature use me.parent.parent
@@ -911,6 +878,12 @@ parameters = {
             }
          }
       }
+   },
+
+   //Used to determine if an object is living in the 
+   //in the visual sense. Is this object walking around?
+   animated : {
+      //
    },
 
    cookable : {
@@ -1020,6 +993,23 @@ parameters = {
       functions : {
          "digest" : function(me) {
             deleteObject(me);
+         }
+      }
+   },
+
+   spawnsMice : {
+      functions : {
+         "tick" : function(me) {
+            console.log("tick");
+            if (Math.random() < .1) {
+               var room = getObjectRoom(me);
+               if (room !== undefined) {
+                  var mouse = createObjectFromTemplate("mouse");
+                  moveObject(mouse, me.x, me.y);
+                  setContainer(mouse, room);
+                  pushGameText(mouse.name + " scurries out of " + me.name);
+               }
+            }
          }
       }
    },

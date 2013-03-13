@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   "lavender", "tea_kettle", "fire_pit", "chem_book", "saffron", "poppy", "coriander", "tea", "collander", "cat", "bio_book", "mouse"
+   "lavender", "tea_kettle", "fire_pit", "chem_book", "poppy", "coriander", "tea", "collander", "cat", "bio_book", "mouse", "mouse_hole"
 ];
 
 //Object that contains the data for the currently loaded room
