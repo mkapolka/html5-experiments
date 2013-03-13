@@ -29,6 +29,11 @@ function is(value) {
 //The container should be an object or room.
 function setContainer(object, container)
 {
+   //Fix for when duplicating objects copies over the "parent" value
+   if (object.parent !== undefined &&
+         object.parent.contents.indexOf(object) === -1) {
+      object.parent = undefined;
+   }
    if (object.parent === container) return;
    if (object.parent !== undefined)
    {
@@ -52,7 +57,7 @@ function setContainer(object, container)
    }
 
    array.push(object);
-   call(container, "addedObject", container);
+   call(container, "addedObject", object);
    call(object, "enteredContainer", container);
 }
 
@@ -61,14 +66,14 @@ function removeFromContainer(object) {
    if (not(object.parent.isRoom)) {
       var oldParent = object.parent;
       setContainer(object, object.parent.parent);
-      moveObject(object, oldParent.x, oldParent.y);
+      moveObject(object, oldParent.x, oldParent.y, false);
       return true;
    }
 
    return false;
 }
 
-function moveObject(object, x, y)
+function moveObject(object, x, y, callActions)
 {
    object.x = x;
    object.y = y;
@@ -77,14 +82,16 @@ function moveObject(object, x, y)
    {
       for (var i in object.contents)
       {
-         moveObject(object.contents[i], x, y);
+         moveObject(object.contents[i], x, y, callActions);
       }
    }
 
-   call(object, "move", x, y);
+   if (callActions) {
+      call(object, "move", x, y);
 
-   if (Math.random() < .3) {
-      call(object, "jostle");
+      if (Math.random() < .3) {
+         call(object, "jostle");
+      }
    }
 }
 
@@ -197,7 +204,12 @@ function splitObject(object, newsize)
 function deleteObject(object)
 {
    if (object.parent === undefined) return;
+   for (var v in object.contents) {
+      removeFromContainer(object.contents[v]);
+   }
+   object.isDestroyed = true;
    setContainer(object, undefined);
+
 }
 
 //Merges objects
@@ -553,7 +565,7 @@ function moveAdjacentTo(mover, other)
 
    if (tx !== undefined)
    {
-      moveObject(mover, tx, ty);
+      moveObject(mover, tx, ty, true);
    }
 }
 
@@ -814,4 +826,89 @@ function isVisible(object) {
    }
 
    return true;
+}
+
+function getObjectRoom(object) {
+   //Topmost object is the best we can do
+   if (is(object.isRoom) || object === undefined) {
+      return object;
+   } else {
+      return getObjectRoom(object.parent);
+   }
+}
+
+function eat(who, target) {
+   call(who, "eat", target);
+
+   var eaten = false;
+   for (var v in who.contents) {
+      if (is(who.contents[v].digesting)) {
+         setContainer(target, who.contents[v]);
+         eaten = true;
+      }
+      call(who.contents[v], "eat", target);
+   }
+
+   //Not sent to a stomach, goes right into the body
+   if (!eaten) {
+      setContainer(target, who);
+   }
+}
+
+function getPronoun(object, type) {
+   if (is(object.male)) {
+      switch (type) {
+         case "his":
+            return "his";
+         break;
+
+         case "him":
+            return "him";
+         break;
+
+         case "he's":
+            return "he's";
+         break;
+
+         case "he":
+            return "he";
+         break;
+      }
+   } else if (is(object.female)) {
+      switch (type) {
+         case "his":
+            return "her";
+         break;
+
+         case "him":
+            return "her";
+         break;
+
+         case "he's":
+            return "she's";
+         break;
+
+         case "he":
+            return "she";
+         break;
+      }
+   } else {
+      switch (type) {
+         case "his":
+            return "its";
+         break;
+
+         case "him":
+            return "it";
+         break;
+
+         case "he's":
+            return "it's";
+         break;
+
+         case "he":
+            return "it";
+         break;
+      }
+   }
 }

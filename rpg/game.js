@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   "lavender", "tea_kettle", "fire_pit", "chem_book", "saffron", "poppy", "coriander", "tea", "collander", "cat", "bio_book"
+   "lavender", "tea_kettle", "fire_pit", "chem_book", "saffron", "poppy", "coriander", "tea", "collander", "cat", "bio_book", "mouse"
 ];
 
 //Object that contains the data for the currently loaded room
@@ -14,6 +14,9 @@ var selected_tile = undefined;
 function setupRoom(width, height)
 {
    var output = room;
+
+   room.width = width;
+   room.height = height;
 
    //Initialize data grid
    output.data = [];
@@ -188,7 +191,7 @@ function doAction(action)
    switch (action.type)
    {
       case "Walk Here":
-         moveObject(player, action.x, action.y);
+         moveObject(player, action.x, action.y, true);
          pushGameText("You walk over there.");
          deselectTile(selected_tile);
       break;
@@ -277,11 +280,13 @@ function doAction(action)
             });
          } else {
             if (objectsHere.length == 0) return;
-            var standingActions = getStandingActions(objectsHere[0]);
-            standingActions[action.type](objectsHere[0], player);
+            var standingActions = getStandingActions(objects[0]);
+            standingActions[action.type](objects[0], player);
             updateTileText(room);
             deselectTile(selected_tile);
          }
+
+         return;
       break;
    }
 
@@ -386,8 +391,7 @@ function pickup(object)
    }
 
    pushGameText("You pick up " + object.name);
-   object.x = player.x;
-   object.y = player.y;
+   moveObject(object, player.x, player.y);
    player.holding = object;
    object.obscured = 1;
    updateTileText(room);
@@ -397,7 +401,7 @@ function putDownAt(x,y){
    if (player.holding !== undefined)
    {
       pushGameText("You put " + player.holding.name + " there.");
-      moveObject(player.holding, x, y);
+      moveObject(player.holding, x, y, true);
       setContainer(player.holding, player.parent);
       player.holding.obscured = 0;
       player.holding = undefined;
@@ -504,7 +508,7 @@ function game_init()
    for (var i in room_contents)
    {
       var object = createObjectFromTemplate(room_contents[i]);
-      moveObject(object, Math.floor(Math.random() * 10), Math.floor(Math.random() * 10));
+      moveObject(object, Math.floor(Math.random() * 10), Math.floor(Math.random() * 10), false);
       setContainer(object, room);
    }
 

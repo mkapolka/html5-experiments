@@ -9,10 +9,29 @@ room =  {
 
 templates.player = {
    name: "You, the player",
-   form: "player",
+   form: "person",
    material: "flesh",
-   contents: [],
+   contents: ["playerStomach", "playerHeart", "playerBrain", "blood"],
    holding: undefined
+}
+
+templates.playerStomach = {
+   name: "your stomach",
+   form: "stomach",
+   material: "flesh"
+}
+
+templates.playerHeart = {
+   name: "your heart",
+   form: "heart",
+   material: "flesh"
+}
+
+templates.playerBrain = {
+   name: "your brain",
+   form: "brain",
+   material: "flesh",
+   playerThink : 1,
 }
 
 templates.cat = {
@@ -20,14 +39,13 @@ templates.cat = {
    form: "cat",
    material: "flesh",
    living: 1,
+   male: true,
 }
 
 templates.catBrain = {
    name: "a cat brain",
    form: "brain",
    material: "flesh",
-   living: 1,
-   oxygenated: 1,
    catThink : 1,
 }
 
@@ -35,15 +53,13 @@ templates.catHeart = {
    name: "a cat heart",
    form: "heart",
    material: "flesh",
-   living: 1,
-   oxygenated: 1,
-   blood_pumping: 1,
 }
 
 templates.catStomach = {
    name: "a cat stomach",
    form: "stomach",
    material: "flesh",
+   carnivoreGag: 1,
 }
 
 templates.mouse = {
@@ -58,6 +74,18 @@ templates.mouseBrain = {
    name: "a mouse brain",
    form: "brain",
    material: "flesh"
+}
+
+templates.mouseHeart = {
+   name: "a mouse heart",
+   form: "heart",
+   material: "flesh",
+}
+
+templates.mouseStomach = {
+   name: "a mouse stomach",
+   form: "stomach",
+   material: "flesh",
 }
 
 templates.blood = {
@@ -128,13 +156,7 @@ templates.fire_pit = {
    material: "stone",
    hot: 1,
    burning: 1,
-   functions : {
-      "tick" : function(me) {
-         if (!me.burning) {
-            me.burning = 0;
-         }
-      }
-   },
+   flameEternal: 1,
    contents : [],
 }
 

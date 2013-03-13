@@ -98,7 +98,25 @@ parameters = {
       functions : {
          "move" : function(me, x, y) {
             if (is(me.holding)) {
-               moveObject(me.holding, x, y);
+               moveObject(me.holding, x, y, true);
+            }
+         },
+         "pickup" : function(me, object) {
+            if (not(me.holding)) {
+               pushGameText(me.name + " picks up " + object.name);
+               moveObject(object, me.x, me.y);
+               me.holding = object;
+               object.obscured = 1;
+            }
+         }, 
+         //Drop whatever this being is holding
+         "drop" : function(me) {
+            if (is(me.holding)) {
+               pushGameText(me.name + " drops " + me.holding.name);
+               moveObject(me.holding, me.x, me.y, true);
+               setContainer(me.holding, me.parent);
+               me.holding.obscured = 0;
+               me.holding = undefined;
             }
          }
       }
@@ -205,12 +223,24 @@ parameters = {
 
             call(me, "burn", me.burning);
 
-            if (Math.random() < .2) {
+            if (Math.random() < .2 && not(me.flameEternal)) {
                pushGameText(me.name + "'s flames die out");
                me.burning -= 1;
             }
          }
       }
+   },
+
+   flameEternal : {
+      values : {
+         1: "will burn until the end of time"
+      },
+      revealed_by : [
+         "magic_knowledge"
+      ],
+      types : [
+         "magical"
+      ]
    },
 
    phlogiston: {
@@ -248,7 +278,7 @@ parameters = {
       ]
    },
 
-   hard: {
+   hard : {
       values: {
          1: "is very hard",
       },
@@ -260,7 +290,7 @@ parameters = {
       ]
    },
 
-   soft: {
+   soft : {
       values: {
          1: "is very soft",
       },
@@ -275,6 +305,13 @@ parameters = {
             if (me.hard > 1) {
                me.hard = undefined;
                me.soft = undefined;
+            }
+         },
+         "slash" : function(me, attacker) {
+            if (is(me.contents) && not(me.open)) {
+               if (me.open === undefined) me.open = 0;
+               pushGameText(me.name + " is slashed open!");
+               me.open +=1;
             }
          }
       }
@@ -541,7 +578,7 @@ parameters = {
                  while (me.contents.length > 0) {
                     var next = me.contents[0]; 
                     removeFromContainer(next);
-                    moveObject(next, target.x, target.y);
+                    moveObject(next, target.x, target.y, true);
                  }
 
                  return;
@@ -573,12 +610,21 @@ parameters = {
 
    living : {
       values: {
-         0: "is alive"
+         0: "is dead",
+         1: "is alive"
       },
       revealed_by : [
-         "biology_knowledge", "necromancy_knowledge"
+         "look", "biology_knowledge", "necromancy_knowledge"
       ],
       functions : {
+         "kill" : function(me) {
+            if (is(me.living)) {
+               if (isVisible(me)) {
+                  pushGameText("The life drains out of " + me.name);
+               }
+               me.living -= 1;
+            }
+         }
       }
    },
 
@@ -598,7 +644,7 @@ parameters = {
          "tick" : function(me) {
             if (not(me.oxygenated)) {
                if (Math.random() < .1) {
-                  me.living -= 1;
+                  call(me, "kill");
                }
             } else {
                if (Math.random() < .1 && is(me.oxygenated)) {
@@ -629,6 +675,7 @@ parameters = {
                   contents.some(function(a){ return is(a.isBlood); })) {
                   //Then pump it!
                   contents.forEach(function(a) { call(a, "heartbeat"); });
+                  call(me.parent, "heartbeat");
                }
             }
          }
@@ -644,8 +691,144 @@ parameters = {
       ],
       functions : {
          "think" : function(me) {
-            //TODO: Cat thoughts
-            
+            if (me.parent !== undefined && not(me.parent.isRoom)) {
+               var cat = me.parent;
+               if (not(cat.living)) return;
+               if (not(me.conscious)) return;
+
+               if (is(cat.holding) && is(cat.holding.alive)) {
+                  if (Math.random() < .5) {
+                     pushGameText(cat.name + " thrashes " + cat.holding.name + " around");
+                     call(cat.holding, "jostle", cat);
+                  } else {
+                     call(cat, "drop", cat.holding);
+                  }
+               }
+
+               //Hungry
+               if (is(cat.hungry)) {
+                  var room = getObjectRoom(cat);
+                  var tasties = room.contents.filter(function(a) {
+                     return a.material === materials.flesh && is(a.small);
+                  });
+
+                  //Sort based on relevant factors
+                  tasties.sort(function(a,b) {
+                     function tastiness(v) {
+                        var o = 0;
+                        if (v.material === materials.flesh) o++;
+                        if (is(v.living)) o--;
+                        if (is(v.nutritious)) o++;
+                        if (is(v.cooked)) o++;
+                        if (is(v.edible)) o++;
+                     }
+                     var ta = tastiness(a);
+                     var tb = tastiness(b);
+                     if (ta > tb) {
+                        return 1;
+                     }
+                     if (ta < tb) {
+                        return -1;
+                     } else {
+                        return 0;
+                     }
+                  });
+
+                  if (tasties.length === 0) return;
+                  var obj = tasties[0];
+                  //Found something tasty looking
+                  //Kill the animal
+                  if (is(obj.living)) {
+                     if (Math.random() < .25) {
+                        pushGameText(cat.name + " eats the " + obj.name);
+                        eat(cat, obj);
+                        return;
+                     }
+
+                     if (Math.random() < .25) {
+                        if (not(obj.open)) {
+                           call(cat, "attack", obj);
+                        } else {
+                           pushGameText(cat.name + " bats " + obj.name + " around");
+                           call(obj, "jostle", cat);
+                        }
+
+                        return;
+                     }
+
+                     if (Math.random() < .5) {
+                        pushGameText(cat.name + " picks up " + obj.name + " in " + getPronoun(cat, "his") + " mouth.");
+                        call(cat, "pickup", obj);
+                     }
+                  } else {
+                     pushGameText(cat.name + " eats the " + obj.name);
+                     eat(cat, obj);
+                  }
+
+                  if(isVisible(cat)) {
+                     pushGameText(cat.name + " prowls around looking for a meal");
+                  }
+
+                  return;
+               }
+
+               if (is(me.parent.parent.isRoom)) {
+                  var room = getObjectRoom(me);
+                  moveObject(me.parent, Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), true);
+               }
+            }
+         }
+      }
+   },
+
+   clawed : {
+      values: {
+         1: "has claws"
+      },
+      revealed_by : [
+         "look", "biology_knowledge"
+      ],
+      functions : {
+         "attack" : function(me, target) {
+            moveAdjacentTo(me, target);
+            if (is(target.soft)) {
+               pushGameText(me.name + " slashes at " + target.name + "!");
+               call(target, "slash", me);
+               return;
+            }
+
+            if (is(target.hard)) {
+               pushGameText(me.name + " tries to slash at " + target.name + ", but it is too hard!");
+               return;
+            }
+
+            if (Math.random() < .25) {
+               pushGameText(me.name + " slashes at " + target.name + "!");
+               call(target, "slash", me);
+               return;
+            }
+
+            pushGameText(me.name + " slashes " + getPronoun(me) + " at " + target.name + ", but it is ineffective.");
+         }
+      }
+   },
+
+   playerThink : {
+      values : {
+         1: "allows you to think",
+      },
+      revealed_by : [
+         "biology_knowledge"
+      ],
+      functions : {
+         "heartbeat" : function(me) {
+            if (me.parent !== undefined && not(me.parent.isRoom)) {
+               if (is(me.parent.hungry)) {
+                  if (Math.random() < .1) {
+                     pushGameText("Your stomach growls");
+                  }
+               }
+            }
          }
       }
    },
@@ -715,7 +898,12 @@ parameters = {
                if (isVisible(me)) {
                   pushGameText(me.name + "'s stomach growls");
                }
-               me.hunger = 1;
+               me.hungry = 1;
+            }
+         },
+         "eat" : function(me) {
+            if (is(me.hungry)) {
+               me.hungry = 0;
             }
          }
       }
@@ -733,6 +921,7 @@ parameters = {
       ],
       functions : {
          "heartbeat" : function(me) {
+            if (!is(me.contents)) return;
             if (me.contents.length > 0) {
                for (var c in me.contents) {
                   if (is(me.contents[c].digestible)) {
@@ -741,6 +930,11 @@ parameters = {
                      call(me, "gag", me.contents[c]);
                   }
                }
+            }
+         },
+         "eat" : function(me, eaten) {
+            if (is(me.contents)) {
+               setContainer(eaten, me);
             }
          }
       }
@@ -757,17 +951,37 @@ parameters = {
          "gag" : function(me, on) {
             var creature;
             if (me.parent !== undefined && me.parent.parent !== undefined) {
-               creature = me.parent.parent;
+               creature = me.parent;
             } else {
                console.log("gagReflex.gag could not find containing creature!");
                return;
             }
             if (Math.random() < .8) {
                pushGameText(creature.name + " vomits up " + on.name);
-               moveObject(on, creature.x, creature.y);
+               moveObject(on, creature.x, creature.y, true);
                setContainer(on, creature.parent);
             } else {
                pushGameText(creature.name + " retches");
+            }
+         }
+      }
+   },
+
+   carnivoreGag : {
+      values : {
+         1: "can digest uncooked meat"
+      },
+      revealed_by : [
+         "biology_knowledge"
+      ],
+      functions : {
+         "addedObject" : function(me, what) {
+            console.log(what);
+            if (what.material === materials.flesh) {
+               if (not(what.digestible)) {
+                  if (what.digestible === undefined) what.digestible = 0;
+                  what.digestible += 1;
+               }
             }
          }
       }
@@ -857,13 +1071,19 @@ parameters = {
       revealed_by : [
          "look"
       ],
-      heldActions : {
+      actionsStanding : {
          //TODO: Held/Stationary actions
+         "Eat" : function(me, caller, target){
+            moveAdjacentTo(caller, me);
+            pushGameText("You eat " + me.name);
+            eat(caller, me);
+         }
       }
    },
 
    nutritious : {
       values: {
+         0: "is drained of nutrients",
          1: "is nutritious"
       },
       revealed_by : [
@@ -873,8 +1093,32 @@ parameters = {
          "chemical"
       ],
       functions : {
-         "digest" : {
-            
+         "digest" : function(me) {
+            var creature;
+            if (parent !== undefined && parent.parent !== undefined) {
+               creature = parent.parent;
+            } else {
+               console.log("Couldn't find object that is digesting " + me.name, me);
+               return;
+            }
+
+            if (not(creature.sated)) {
+               creature.sated = 1;
+            }
+         }
+      }
+   },
+
+   digestible : {
+      values: {
+         1: "is easily digestible"
+      },
+      revelaled_by : [
+         "biology_knowledge",
+      ],
+      functions : {
+         "digest" : function(me) {
+            deleteObject(me);
          }
       }
    },

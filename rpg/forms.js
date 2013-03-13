@@ -1,11 +1,8 @@
 forms = {
-   "player" : {
+   "person" : {
       symbol: "@",
-      actions : {
-         "move" : {
-            
-         }
-      },
+      hungry: 0,
+      big: 1
    },
 
    "book" : {
@@ -32,6 +29,7 @@ forms = {
             pushGameText("You pinch off a sprig of " + me.name);
             var dup = duplicateObject(me);
             dup.name = "a sprig from " + me.name;
+            dup.edible = 1;
             dup.big = undefined;
             setContainer(dup, room);
          }
@@ -41,7 +39,7 @@ forms = {
    "kettle" : {
       symbol: "K",
       openable: 1,
-      open: 1,
+      open: 0,
       watertight: 1,
       small: 1,
       hollow: 1,
@@ -62,35 +60,37 @@ forms = {
    "cat" : {
       symbol: "C",
       contents : ["catBrain", "catHeart", "blood", "catStomach"],
+      hungry: 1,
+      holding: undefined,
+      clawed: 1,
+      edible: 1
    },
 
    "mouse" : {
       symbol: "M",
       contents: ["mouseBrain", "mouseHeart", "blood"],
       small: 1,
+      living: -1,
+      hungry: 0,
+      soft: 1
    },
 
    "brain" : {
       symbol: "B",
-      living: 1,
-      oxygenated: 1,
       sentient: 1,
       conscious: 1,
    },
 
    "heart" : {
       symbol: "<3",
-      living: 1,
-      oxygenated: 1,
+      blood_pumping: 1,
    },
 
    "stomach" : {
       symbol: "S",
-      living: 1,
-      digestive: 1,
+      digesting: 1,
+      contents : [],
       gagReflex: 1,
-      oxygenated: 1,
-      hungry: 0,
       sated: 0
    },
 }
@@ -117,7 +117,9 @@ materials = {
       name: "flesh",
       watertight: 1,
       cookable : 1,
-      soft: 1
+      soft: 1,
+      oxygenated: 1,
+      living: 1,
    },
    "stone" : {
       name: "stone",
