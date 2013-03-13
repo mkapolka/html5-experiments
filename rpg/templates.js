@@ -111,7 +111,7 @@ templates.bio_book = {
 }
 
 templates.lavender = {
-   name: "lavender bush",
+   name: "a lavender bush",
    form: "bush",
    material: "plant",
    calming: 1,
@@ -119,7 +119,7 @@ templates.lavender = {
 }
 
 templates.coriander = {
-   name: "coriander bush",
+   name: "a coriander bush",
    form: "bush",
    material: "plant",
    angering: 1,
@@ -127,7 +127,7 @@ templates.coriander = {
 }
 
 templates.saffron = {
-   name: "coriander bush",
+   name: "a coriander bush",
    form: "bush",
    material: "plant",
    hunger_inducing: 1,
@@ -135,7 +135,7 @@ templates.saffron = {
 }
 
 templates.tea = {
-   name: "tea bush",
+   name: "a tea bush",
    form: "bush",
    material: "plant",
    astringent: 1,
@@ -143,7 +143,7 @@ templates.tea = {
 }
 
 templates.poppy = {
-   name: "poppy bush",
+   name: "a poppy bush",
    form: "bush",
    material: "plant",
    anaesthetic: 1,

@@ -374,7 +374,7 @@ function submerge(liquid, submersed)
 function reveal(object, method)
 {
    var output = [];
-   output[0] = "The " + object.name + "...";
+   output[0] = object.name + "...";
    var props_revealed = 0;
    for (var k in object)
    {
