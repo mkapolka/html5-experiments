@@ -2,25 +2,25 @@
 var DEFAULT_DEFAULT_VALUE = 5;
 
 function not(value) {
-   if (value === undefined) {
-      return true;
-   } else {
-      if (typeof value == "boolean") {
-         return !value;
-      } else {
-         return value <= 0;
-      }
-   }
+   return !is(value);
 }
 
 function is(value) {
    if (value === undefined) {
       return false;
    } else {
-      if (typeof value === "boolean") {
-         return value;
-      } else {
-         return value > 0;
+      switch (typeof value) {
+         case "boolean":
+            return value;
+         break;
+
+         case "number":
+            return value > 0;
+         break;
+
+         case "object":
+            return true;
+         break;
       }
    }
 }
@@ -29,6 +29,7 @@ function is(value) {
 //The container should be an object or room.
 function setContainer(object, container)
 {
+   if (object.parent === container) return;
    if (object.parent !== undefined)
    {
       if (object.parent.contents.indexOf(object) !== -1)
@@ -81,6 +82,10 @@ function moveObject(object, x, y)
    }
 
    call(object, "move", x, y);
+
+   if (Math.random() < .3) {
+      call(object, "jostle");
+   }
 }
 
 function open(object)
@@ -365,12 +370,20 @@ function reveal(object, method)
       {
          if (parameters[k].revealed_by.indexOf(method) !== -1)
          {
-            var last = "";
-            for (var i in parameters[k].values)
-            {
-               if (i <= object[k])
+            //Functions for describing non-number values
+            if (typeof parameters[k].values == "function") {
+               last = parameters[k].values(object[k], object);
+            } else {
+               //Use array to describe everything else
+               //TODO: Revisit description mechanics in light of new non-integer
+               //game logic
+               var last = "";
+               for (var i in parameters[k].values)
                {
-                  last = parameters[k].values[i];
+                  if (i <= object[k])
+                  {
+                     last = parameters[k].values[i];
+                  }
                }
             }
             if (last !== "")
@@ -383,18 +396,10 @@ function reveal(object, method)
       }
    }
 
-   //Special logic for contents
-   if (object.contents !== undefined && is(object.open)) {
-      var contents_string = "contains ";
-      var os = object.contents.map(function(v){ return v.name; });
-      contents_string += os.join(",");
-      output.push(contents_string);
-   }
-
    if (props_revealed === 0)
    {
       //output = "You cannot discern anything about this object in this way!";
-      output[0] = "You cannot discern anything about this object in this way!";
+      output[0] = "You cannot discern anything about " + object.name + " in this way!";
    }
    
    return output;
@@ -548,8 +553,7 @@ function moveAdjacentTo(mover, other)
 
    if (tx !== undefined)
    {
-      mover.x = tx;
-      mover.y = ty;
+      moveObject(mover, tx, ty);
    }
 }
 
@@ -689,7 +693,7 @@ function getStandingActions(object) {
 
 function objectCombine(objectTo, objectFrom, callback) {
    for (var o in objectFrom) {
-      objectTo[o] = callback(objectFrom[o], objectTo[o]);
+      objectTo[o] = callback(objectTo[o], objectFrom[o]);
    }
 }
 
@@ -729,33 +733,33 @@ function setSubTemplate(object, stName, stValue) {
 
    //Subtract the old values
    if (object[stName] !== undefined) {
-      objectCombine(object, object[stName], function(a, b) {
-         switch (typeof b) {
+      objectCombine(object, object[stName], function(to, from) {
+         switch (typeof from) {
             case "number":
-               if (a === undefined) a = 0;
-               return a-b;
+               if (to === undefined) to = 0;
+               return to-from;
             break;
 
             case "array":
-               if (a === undefined) a = [];
-               for (var i in b) {
-                  if (a.indexOf(b[i]) !== -1) {
-                     a.splice(a.indexOf(b[i]), 1);
+               if (to === undefined) to = [];
+               for (var i in from) {
+                  if (to.indexOf(from[i]) !== -1) {
+                     to.splice(to.indexOf(from[i]), 1);
                   }
                }
-               return a;
+               return to;
             break;
 
             case "object":
-               if (a === undefined) a = {};
-               for (var i in b) {
-                  delete a[i];
+               if (to === undefined) to = {};
+               for (var i in from) {
+                  delete to[i];
                }
-               return a;
+               return to;
             break;
 
             default:
-               return a;
+               return to;
             break;
          }
       });
@@ -766,31 +770,35 @@ function setSubTemplate(object, stName, stValue) {
    object[stName] = stValue;
 
    //Add the new values
-   objectCombine(object, object[stName], function(a, b) {
-      switch (typeof b) {
+   objectCombine(object, object[stName], function(to, from) {
+      switch (typeof from) {
          case "number":
-            if (a === undefined) a = 0;
-            return a+b;
+            if (to === undefined) to = 0;
+            return to+from;
          break;
 
          case "array":
-            if (a === undefined) a = [];
-            for (var i in b) {
-               a.push(b[i]);
+            if (to === undefined) to = [];
+            for (var i in from) {
+               to.push(from[i]);
             }
-            return a;
+            return to;
          break;
 
          case "object":
-            if (a === undefined) a = {};
-            for (var i in b) {
-               a[i] = b[i];
+            if (to === undefined) to = {};
+            for (var i in from) {
+               to[i] = from[i];
             }
-            return a;
+            return to;
+         break;
+
+         case "string":
+            return to;
          break;
 
          default:
-            return a;
+            return to;
          break;
       }
 });

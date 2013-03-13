@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   "lavender", "tea_kettle", "fire_pit", "chem_book", "saffron", "poppy", "coriander", "tea", "collander"
+   "lavender", "tea_kettle", "fire_pit", "chem_book", "saffron", "poppy", "coriander", "tea", "collander", "cat", "bio_book"
 ];
 
 //Object that contains the data for the currently loaded room
@@ -295,7 +295,6 @@ function showObjectButtons(room, x, y, callback)
    var objects = [];
    var objects_here = getObjectsAt(room, x, y);
 
-   
    for (var o in objects_here)
    {
       var obj = objects_here[o];
@@ -315,9 +314,14 @@ function showObjectButtons(room, x, y, callback)
       }
    }
 
-   if (objects.length <= 1)
+   if (objects.length === 0) {
+      callback({x:x, y:y, isTile:true});
+      return;
+   }
+
+   if (objects.length === 1)
    {
-      callback(objects_here[0]);
+      callback(objects[0]);
       return;
    }
 
@@ -382,8 +386,10 @@ function pickup(object)
    }
 
    pushGameText("You pick up " + object.name);
-   setContainer(object, player);
+   object.x = player.x;
+   object.y = player.y;
    player.holding = object;
+   object.obscured = 1;
    updateTileText(room);
 }
 
@@ -392,7 +398,8 @@ function putDownAt(x,y){
    {
       pushGameText("You put " + player.holding.name + " there.");
       moveObject(player.holding, x, y);
-      setContainer(player.holding, room);
+      setContainer(player.holding, player.parent);
+      player.holding.obscured = 0;
       player.holding = undefined;
       updateTileText(room);
    }
@@ -404,6 +411,7 @@ function putDownIn(container)
    {
       pushGameText("You put " + player.holding.name + " inside " + container.name);
       setContainer(player.holding, container);
+      player.holding.obscured = 0;
       player.holding = undefined;
       updateTileText(room);
    }
@@ -424,7 +432,9 @@ function updateTileText(room)
    {
       var object = room.contents[i];
 
-      $(room.data[object.x][object.y].cell).text(getGlyph(object));
+      if (not(object.obscured)) {
+         $(room.data[object.x][object.y].cell).text(getGlyph(object));
+      }
    }
 }
 

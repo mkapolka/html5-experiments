@@ -10,8 +10,62 @@ room =  {
 templates.player = {
    name: "You, the player",
    form: "player",
+   material: "flesh",
    contents: [],
    holding: undefined
+}
+
+templates.cat = {
+   name: "Theophile the cat",
+   form: "cat",
+   material: "flesh",
+   living: 1,
+}
+
+templates.catBrain = {
+   name: "a cat brain",
+   form: "brain",
+   material: "flesh",
+   living: 1,
+   oxygenated: 1,
+   catThink : 1,
+}
+
+templates.catHeart = {
+   name: "a cat heart",
+   form: "heart",
+   material: "flesh",
+   living: 1,
+   oxygenated: 1,
+   blood_pumping: 1,
+}
+
+templates.catStomach = {
+   name: "a cat stomach",
+   form: "stomach",
+   material: "flesh",
+}
+
+templates.mouse = {
+   name: "a field mouse",
+   form: "mouse",
+   material: "flesh",
+   soft: 1,
+   living: 1,
+}
+
+templates.mouseBrain = {
+   name: "a mouse brain",
+   form: "brain",
+   material: "flesh"
+}
+
+templates.blood = {
+   name: "some blood",
+   form: "liquid",
+   material: "blood",
+   isBlood: 1,
+   oxygenated: 1,
 }
 
 templates.chem_book = {
@@ -19,6 +73,13 @@ templates.chem_book = {
    form : "book",
    material : "paper",
    revealType: "alchemy_knowledge"
+}
+
+templates.bio_book = {
+   name : "a biology textbook",
+   form : "book",
+   material : "paper",
+   revealType: "biology_knowledge"
 }
 
 templates.lavender = {
@@ -78,8 +139,8 @@ templates.fire_pit = {
 }
 
 templates.water = {
-   form: "water",
-   name: "water",
+   form: "liquid",
+   name: "some water",
    material: "water",
    state: "liquid",
    density: 5,

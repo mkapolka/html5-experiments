@@ -9,6 +9,9 @@ parameters = {
       values: {
          1: "can be opened",
       },
+      revealed_by : [
+         "look"
+      ],
       default: 0,
       types: ["mechanical"],
       actionsStanding : {
@@ -43,13 +46,14 @@ parameters = {
       ],
       types: ["mechanical"],
       functions : {
-         "jostle" : function(me, jostler, force) {
+         "jostle" : function(me, jostler) {
             if (me.contents !== undefined)
             {
                for (var i in me.contents)
                {
-                  if (Math.random() < .1)
+                  if (Math.random() < .5)
                   {
+                     pushGameText(me.contents[i].name + " falls out of " + me.name);
                      removeFromContainer(me.contents[i]);      
                   }
                }
@@ -75,6 +79,26 @@ parameters = {
                   pushGameText(me.name + " starts to boil");
                }
                me.boiling = 1;
+            }
+         }
+      }
+   },
+
+   holding : {
+      revealed_by : [
+         "look"
+      ],
+      values : function(value) {
+         if (value !== undefined) {
+            return "is holding " + value.name;
+         } else {
+            return "";
+         }
+      },
+      functions : {
+         "move" : function(me, x, y) {
+            if (is(me.holding)) {
+               moveObject(me.holding, x, y);
             }
          }
       }
@@ -420,8 +444,8 @@ parameters = {
       ],
       functions : {
          "tick" : function(me) {
-            if (not(me.parent.watertight)) {
-               setGameText(me.name + " spills out of the " + me.parent.name);
+            if (not(me.parent.watertight) && not(me.parent.isRoom)) {
+               pushGameText(me.name + " spills out of the " + me.parent.name);
                removeFromContainer(me);
             }
             var to = getTouchingObjects(me);
@@ -489,8 +513,39 @@ parameters = {
    },
 
    contents : {
+      revealed_by : [
+         "look"
+      ],
+      values: function(contents, object) {
+         if (is(object.open)) {
+            if (contents.length > 0) {
+               var contents_string = "contains ";
+               var os = object.contents.map(function(v){ return v.name; });
+               contents_string += os.join(", ");
+               return contents_string;
+            } else {
+               return "is empty";
+            }
+         } else {
+            return "";
+         }
+      },
       actionsHeld : {
            "Pour" : function(me, caller, target) {
+              if (target.isTile) {
+                 moveAdjacentTo(caller, target);
+                 pushGameText("You pour the contents of " + me.name + " out onto the floor");
+
+                 //copy array to avoid concurrent modification error
+
+                 while (me.contents.length > 0) {
+                    var next = me.contents[0]; 
+                    removeFromContainer(next);
+                    moveObject(next, target.x, target.y);
+                 }
+
+                 return;
+              }
               if (target.contents !== undefined) {
                  pushGameText("You pour the contents of " + me.name + " into " + target.name);  
                  for (var v in me.contents) {
@@ -501,5 +556,330 @@ parameters = {
               }
            }
         }
+   },
+
+   material : {
+      revealed_by : [
+         "look"
+      ],
+      values : function(value) {
+         if (value.name !== undefined) {
+            return "is made of " + value.name;
+         } else {
+            return "";
+         }
       }
+   },
+
+   living : {
+      values: {
+         0: "is alive"
+      },
+      revealed_by : [
+         "biology_knowledge", "necromancy_knowledge"
+      ],
+      functions : {
+      }
+   },
+
+   oxygenated : {
+      values: {
+         1: "is rich with oxygen"
+      },
+      revealed_by : [
+         "biology_knowledge", "chemistry_knowledge"
+      ],
+      functions : {
+         "heartbeat" : function(me){
+            if (not(me.oxygenated)) {
+               me.oxygenated = 1;
+            }
+         }, 
+         "tick" : function(me) {
+            if (not(me.oxygenated)) {
+               if (Math.random() < .1) {
+                  me.living -= 1;
+               }
+            } else {
+               if (Math.random() < .1 && is(me.oxygenated)) {
+                  me.oxygenated -= 1;
+               }
+            }
+         }
+      }
+   },
+
+   isBlood : {
+   },
+
+   blood_pumping : {
+      values: {
+         1: "provides its host with blood"
+      },
+      revealed_by : [
+         "biology_knowledge"
+      ],
+      functions : {
+         "tick" : function(me) {
+            if (me.parent !== undefined && not(me.parent.isRoom)) {
+               var contents = me.parent.contents;
+               
+               if (is(me.parent.living) && 
+                  //Does this creature have blood?
+                  contents.some(function(a){ return is(a.isBlood); })) {
+                  //Then pump it!
+                  contents.forEach(function(a) { call(a, "heartbeat"); });
+               }
+            }
+         }
+      }
+   },
+
+   catThink : {
+      values: {
+         1: "thinks like a cat"
+      },
+      revealed_by : [
+         "biology_knowledge", "psychology_knowledge", "animal_knowledge"
+      ],
+      functions : {
+         "think" : function(me) {
+            //TODO: Cat thoughts
+            
+         }
+      }
+   },
+
+   //Humors
+   calm : {
+      values: {
+         1: "is calm"
+      },
+      revealed_by : [
+         "psychology_knowledge", "look",
+      ],
+      functions : {
+         "calm" :  function(me) {
+            if (is(me.angry)) {
+               me.angry = 0;
+            } else {
+               if (not(me.calm)) {
+                  me.calm = 1;
+               }
+            }
+         },
+      }
+   },
+
+   angry : {
+      values: {
+         1: "is angry",
+      },
+      revealed_by : [
+         "psychology_knowledge", "look",
+      ],
+      functions : {
+         "anger" : function(me) {
+            if (is(me.calm)) {
+               me.calm = 0;
+            } else {
+               if (not(me.angry)) {
+                  me.angry = 1;
+               }
+            }
+         }
+      }
+   },
+
+   hungry : {
+      values: {
+         1: "is hungry",
+      },
+      revealed_by : [
+         "psychology_knowledge", "look",
+      ],
+      functions : {
+         "tick" : function(me) {
+            if (is(me.hungry)) {
+               if (Math.random() < .5) {
+                  call(me, "anger");
+               }
+            } else {
+               if (Math.random() < .1) {
+                  call(me, "hunger");
+               }
+            }
+         },
+         "hunger" : function(me) {
+            if (not(me.hungry)) {
+               if (isVisible(me)) {
+                  pushGameText(me.name + "'s stomach growls");
+               }
+               me.hunger = 1;
+            }
+         }
+      }
+   },
+
+   //Remember that this will typically be a property of stomachs
+   //so if you want to do something to the creature use me.parent.parent
+   //instead of just me.parent
+   digesting : {
+      values : {
+         1: "is for digesting food"
+      },
+      revealed_by : [
+         "biology_knowledge"
+      ],
+      functions : {
+         "heartbeat" : function(me) {
+            if (me.contents.length > 0) {
+               for (var c in me.contents) {
+                  if (is(me.contents[c].digestible)) {
+                     call(me.contents[c], "digest");
+                  } else {
+                     call(me, "gag", me.contents[c]);
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   gagReflex : {
+      values : {
+         1: "will vomit up food that isn't digestible"
+      },
+      revealed_by : [
+         "biology_knowledge",
+      ],
+      functions : {
+         "gag" : function(me, on) {
+            var creature;
+            if (me.parent !== undefined && me.parent.parent !== undefined) {
+               creature = me.parent.parent;
+            } else {
+               console.log("gagReflex.gag could not find containing creature!");
+               return;
+            }
+            if (Math.random() < .8) {
+               pushGameText(creature.name + " vomits up " + on.name);
+               moveObject(on, creature.x, creature.y);
+               setContainer(on, creature.parent);
+            } else {
+               pushGameText(creature.name + " retches");
+            }
+         }
+      }
+   }
+
+   scared : {
+      values: {
+         1: "is shaking with fear"
+      },
+      revealed_by : [
+         "psychology_knowledge", "look"
+      ],
+   },
+
+   sentient : {
+      values: {
+         1: "is sentient"
+      },
+      revealed_by : [
+         "biology_knowledge"
+      ],
+      functions : {
+         "heartbeat" : function(me) {
+            if (is(me.living) && is(me.conscious)) {
+               call(me, "think");               
+            }
+         }
+      }
+   },
+
+   cookable : {
+      values: {
+         1: "can be cooked",
+      },
+      revealed_by : [
+         "alchemy_knowledge",
+      ],
+      functions : {
+         "heat" : function(me) {
+            if (is(me.hot) && Math.random() < .1) {
+               if (not(me.cooked) && not(me.burnt)) {
+                  if (me.nutritious === undefined) me.nutritious = 0;      
+                  if (me.edible === undefined) me.edible = 0;      
+                  if (isVisible(me)) {
+                     pushGameText(me.name + " begins to smell tasty!");
+                  }
+                  me.edible += 1;
+                  me.nutritious += 1;
+                  me.cooked = 1;
+                  call(me, "cook");
+               } else {
+                  if (isVisible(me)) {
+                     pushGameText(me.name + " begins to smell burnt.");
+                  }
+                  me.cooked = 0;
+                  me.nutritious -= 1;
+                  me.burnt = 1;
+                  call(me, "cook");
+               }
+            }
+         }
+      }
+   },
+
+   cooked : {
+      values : {
+         1: "has been cooked"
+      },
+      revealed_by : [
+         "look"
+      ],
+   },
+
+   burnt : {
+      values: {
+         1: "was burnt from being cooked too long",
+      },
+      revealed_by : [
+         "look"
+      ]
+   },
+
+   edible : {
+      values: {
+         1: "looks edible"
+      },
+      revealed_by : [
+         "look"
+      ],
+      heldActions : {
+         //TODO: Held/Stationary actions
+      }
+   }
+
+   nutritious : {
+      values: {
+         1: "is nutritious"
+      },
+      revealed_by : [
+         "chemistry_knowledge", "biology_knowledge",
+      ],
+      types : [
+         "chemical"
+      ],
+      functions : {
+         "digest" : {
+            
+         }
+      }
+   },
+
+   obscured : {
+      //
+   }
 }
