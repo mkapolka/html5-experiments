@@ -744,7 +744,7 @@ parameters = {
             }
          }
       }
-   }
+   },
 
    gagReflex : {
       values : {
@@ -771,7 +771,7 @@ parameters = {
             }
          }
       }
-   }
+   },
 
    scared : {
       values: {
@@ -860,7 +860,7 @@ parameters = {
       heldActions : {
          //TODO: Held/Stationary actions
       }
-   }
+   },
 
    nutritious : {
       values: {
