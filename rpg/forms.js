@@ -60,7 +60,6 @@ forms = {
       symbol: "K",
       openable: 1,
       open: 0,
-      watertight: 1,
       small: 1,
       hollow: 1,
    },
@@ -104,6 +103,10 @@ forms = {
 
    "well" : {
       symbol: "W"
+   },
+
+   "sponge" : {
+      symbol: "S"
    }
 }
 
@@ -158,5 +161,47 @@ materials = {
       isLiquid: 1,
       isBlood: 1,
       boilable: -1
+   },
+   "sponge" : {
+      name: "sponge",
+      watertight: 1,
+      actionsHeld : {
+         "Sop" : function(me, caller, target) {
+            if (is(target.isLiquid)) {
+               moveAdjacentTo(caller, target);
+               pushGameText("You sop up " + target.name);
+               setContainer(target, me);
+               combineByType(me, me, target, ["chemical"]);
+            }
+         },
+         "Wring" : function(me, caller, target) {
+            if (!target.isTile && (not(target.contents) || not(target.open))) {
+               pushGameText("You can't wring the sponge into that!");   
+            }
+
+            var out = [];
+            for (var v in me.contents) {
+               if (is(me.contents[v].isLiquid)) {
+                  out.push(me.contents[v]);
+               }
+            }
+
+            console.log(arguments);
+            moveAdjacentTo(caller, target);
+            if (not(target.isTile)) {
+               for (var v in out) {
+                  setContainer(out[v], target);
+               }
+               pushGameText("You wring the contents of the sponge into " + target.name);
+            } else {
+               for (var v in out) {
+                  setContainer(out[v], getRoom(me));
+                  moveObject(out[v], target.x, target.y);
+               }
+               pushGameText("You wring the contents of the sponge onto the floor.");
+            }
+
+         }
+      }
    }
 }

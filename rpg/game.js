@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   "lavender", "tea_kettle", "fire_pit", "chem_book", "poppy", "coriander", "tea", "collander", "cat", "bio_book", "mouse", "mouse_hole", "well"
+   "lavender", "tea_kettle", "fire_pit", "chem_book", "poppy", "coriander", "tea", "collander", "cat", "bio_book", "mouse", "mouse_hole", "well", "sponge"
 ];
 
 //Object that contains the data for the currently loaded room
@@ -255,9 +255,8 @@ function doAction(action)
                   updateTileText(room);
                   deselectTile(selected_tile);
                });
+               return;
             }
-
-            return;
          }
 
          //Standing action
@@ -279,8 +278,9 @@ function doAction(action)
                object.actionsStanding[action.type](object, player); 
             });
          } else {
-            if (objectsHere.length == 0) return;
+            if (objects.length == 0) return;
             var standingActions = getStandingActions(objects[0]);
+            console.log(standingActions);
             standingActions[action.type](objects[0], player);
             updateTileText(room);
             deselectTile(selected_tile);

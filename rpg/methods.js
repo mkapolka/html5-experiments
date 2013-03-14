@@ -248,10 +248,10 @@ function combineByType(output, objectA, objectB, types, callback) {
 
    var paramsA = [];
    var paramsB = [];
-   if (typeof types === "array") {
+   if (typeof types === "object") {
       for (var a in types) {
-         paramsA = paramsA.join(getParamsByType(objectA, types[a]));
-         paramsB = paramsB.join(getParamsByType(objectB, types[a]));
+         paramsA = paramsA.concat(getParamsByType(objectA, types[a]));
+         paramsB = paramsB.concat(getParamsByType(objectB, types[a]));
       }
    } else {
       paramsA = getParamsByType(objectA, types);

@@ -51,6 +51,7 @@ templates.catBrain = {
    hunterThink: 1,
    wanderBored: 1,
    stressedAttack : 1,
+   catBrain: 1,
 
    hungry: 1
 }
@@ -171,12 +172,7 @@ templates.water = {
    form: "liquid",
    name: "some water",
    material: "water",
-   state: "liquid",
-   density: 5,
-   temperature: 5,
-   boilable: 6,
    isLiquid: 1,
-   size: 5,
 }
 
 templates.collander = {
@@ -204,7 +200,16 @@ templates.well = {
    form: "well",
    material: "stone",
    contents: ["water"],
+   open: 1,
    isSpring: 1,
    big: 1,
    rooted : 1,
+}
+
+templates.sponge = {
+   name : "a sponge",
+   form : "sponge",
+   material: "sponge",
+   contents: [],
+   small: 1
 }

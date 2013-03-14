@@ -47,15 +47,21 @@ parameters = {
       types: ["mechanical"],
       functions : {
          "jostle" : function(me, jostler) {
-            if (me.contents !== undefined)
+            if (me.contents !== undefined && is(me.open))
             {
+               var fallouts = [];
                for (var i in me.contents)
                {
                   if (Math.random() < .5)
                   {
                      pushGameText(me.contents[i].name + " falls out of " + me.name);
-                     removeFromContainer(me.contents[i]);      
+                     fallouts.push(me.contents[i]);
                   }
+               }
+
+               for (var i in fallouts) {
+                  removeFromContainer(fallouts[i]);      
+                  moveRandom(fallouts[i], 1);
                }
             }
          },//jostle
@@ -63,11 +69,9 @@ parameters = {
    },
 
    //Object can be boiled. Higher value = requires more heat
-   boilable: {
-      values: {
-         1: "can be boiled"
-      },
-      default: 10,
+   boilable : {
+      values: { 1: "can be boiled" },
+      revealed_by : [ "chemistry_knowledge" ],
       types: [ "physical" ],
       functions : {
          "tick": function(me) {
@@ -129,7 +133,12 @@ parameters = {
       default: 0,
       functions : {
          "tick" : function(me) {
-            //TODO: Add boiling logic here
+            if (is(me.boiling) && Math.random() < .1) {
+               if (isVisible(me)) {
+                  pushGameText(me.name + " boils away!");
+               }
+               deleteObject(me);
+            }
          }
       }
    },
@@ -368,9 +377,9 @@ parameters = {
          "jostle" : function(me, jostler, amount) {
             var touching = getObjectsTouching(me);
             for (var t in touching) {
-               if (touching[t].isLiquid > 0) {
+               if (is(touching[t].isLiquid)) {
                   pushGameText(me.name + " dissolves into " + touching[t].name);
-                  dissolve(me, touching[t]);
+                  mergeObject(touching[t], me, ["chemical"]);
                   return;
                }
             }
@@ -388,7 +397,6 @@ parameters = {
       types: [
          "chemical"
       ],
-      default: 0
    }, 
 
    //TODO: Intereing logic for these chemical properties
@@ -790,7 +798,7 @@ parameters = {
       ],
       functions : {
          "addedObject" : function(me, what) {
-            if (what.material === materials.flesh) {
+            if (what.material === materials.flesh || is(what.isBlood)) {
                if (not(what.digestible)) {
                   if (what.digestible === undefined) what.digestible = 0;
                   what.digestible += 1;

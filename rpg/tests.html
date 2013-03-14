@@ -4,6 +4,7 @@
    <script type="text/javascript" src="jquery-1.9.1.js"></script>
    <script type="text/javascript" src="forms.js"></script>
    <script type="text/javascript" src="parameters.js"></script>
+   <script type="text/javascript" src="ai.js"></script>
    <script type="text/javascript" src="templates.js"></script>
    <script type="text/javascript" src="methods.js"></script>
 
@@ -29,7 +30,7 @@
          b.isLiquid = 1;
 
          var out = {};
-         out = dissolve(a, b);
+         out = combineByType(b, b, a, ["chemical"]);
 
          return (out.calming == 1 && out.isLiquid == 1 && out.anaesthetic == 1);
       }

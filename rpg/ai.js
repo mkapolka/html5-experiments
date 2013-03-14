@@ -10,6 +10,8 @@ parameters.sentient = {
          var body = getBrainOwner(me);
          if (is(me.living) && is(me.conscious)) {
             call(me, "think", body);
+         } else {
+            return;
          }
 
          if (is(me.hungry)) {
@@ -198,14 +200,22 @@ parameters.sleeping = {
    },
    functions : {
       "heartbeat" : function(me) {
-         if (Math.random() < .1) {
+         if (is(me.sleeping) && Math.random() < .1) {
             sub(me, "sleeping");
          }
       },
       "add" : function(me) {
+         var owner = getBrainOwner(me);
+         if (owner) {
+            pushGameText(getBrainOwner(me).name + " dozes off.");
+         }
          sub(me, "conscious");
       },
       "sub" : function(me) {
+         var owner = getBrainOwner(me);
+         if (owner) {
+            pushGameText(getBrainOwner(me).name + " wakes up.");
+         }
          add(me, "conscious");
       }
    }
@@ -223,7 +233,6 @@ parameters.catBrain = {
          }
 
          if (Math.random() < .75) {
-            pushGameText(body.name + " dozes off");
             add(me, "sleeping");
          }
       }
@@ -246,7 +255,8 @@ parameters.sizeFilter = {
             }
 
             //Normal size: only eat small things
-            if (not(me.big) && not(me.small) && is(a.small)) {
+            //if (not(me.big) && not(me.small) && is(a.small)) {
+            if (not(me.big) && not(me.small) && not(a.big)) {
                return false;
             }
 
@@ -267,7 +277,9 @@ parameters.sizeFilter = {
 
 //functions
 function getTasty(brain) {
+   var body = getBrainOwner(brain);
    var tasties = getRoom(brain).contents.slice();
+   tasties.splice(tasties.indexOf(body), 1);
    call(brain, "filterFood", tasties);
    return pickRandom(tasties);
 }
