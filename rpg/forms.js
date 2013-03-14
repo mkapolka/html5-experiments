@@ -51,7 +51,7 @@ forms = {
             dup.name = "a sprig from " + me.name;
             dup.edible = 1;
             dup.big = undefined;
-            setContainer(dup, room);
+            setContainer(dup, getRoom(me));
          }
       }
    },

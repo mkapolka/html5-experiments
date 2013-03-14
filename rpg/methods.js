@@ -585,6 +585,7 @@ function getObjectsTouching(object) {
 //Actions that can be performed on an object when the player is holding it
 function getHeldActions(object) {
    var output = {};
+
    for (var a in object.actionsHeld) {
       output[a] = object.actionsHeld[a];
    }

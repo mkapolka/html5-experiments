@@ -52,7 +52,7 @@ parameters.hungry = {
       "hunger" : function(me) {
          if (not(me.hungry)) {
             if (isVisible(me)) {
-               pushGameText(me.name + "'s stomach growls");
+               say(me.name + "'s stomach growls", me, "say");
             }
             me.hungry = 1;
          }
@@ -68,11 +68,29 @@ parameters.stressed = {
       "psychology_knowledge"
    ],
    functions : {
-      "tick" : function(me) {
+      "think" : function(me, body) {
          if (is(me.stressed)) {
             if (Math.random() < .3) {
-               pushGameText(getBrainOwner(me).name + " calms down.");
+               say(getBrainOwner(me).name + " calms down.", body, "see");
                sub(me, "stressed");
+            }
+         }
+      }
+   }
+}
+
+parameters.escapeArtist = {
+   values: { 1: "will escape if contained or grabbed" },
+   revealed_by: [ "psychology_knowledge" ],
+   functions : {
+      "think" : function(me, body) {
+         if (not(body.parent.isRoom)) {
+            call(body, "attack", body.parent);
+            add(me, "stress");
+            if (is(body.parent.open)) {
+               var cont = body.parent;
+               removeFromContainer(body);
+               say(body.name + " leaps out of " + cont.name, body, "see");
             }
          }
       }
@@ -131,7 +149,7 @@ parameters.hunterThink = {
          if (target !== undefined) {
             if (is(target.animated)) {
                if (Math.random() < .25) {
-                  pushGameText(cat.name + " gobbles up the poor " + target.name);
+                  say(cat.name + " gobbles up the poor " + target.name, cat, "see");
                   eat(cat, target);
                   return;
                }
@@ -139,11 +157,11 @@ parameters.hunterThink = {
                call(cat, "attack", target);
                return;
             } else {
-               pushGameText(cat.name + " eats the " + target.name);
+               say(cat.name + " eats the " + target.name, cat, "see");
                eat(cat, target);
             }
          } else {
-            pushGameText(cat.name + " leers around hungrily, looking for its next meal");
+            say(cat.name + " leers around hungrily, looking for its next meal", cat, "see");
          }
       }
    }
@@ -207,14 +225,14 @@ parameters.sleeping = {
       "add" : function(me) {
          var owner = getBrainOwner(me);
          if (owner) {
-            pushGameText(getBrainOwner(me).name + " dozes off.");
+            say(getBrainOwner(me).name + " dozes off.", owner, "see");
          }
          sub(me, "conscious");
       },
       "sub" : function(me) {
          var owner = getBrainOwner(me);
          if (owner) {
-            pushGameText(getBrainOwner(me).name + " wakes up.");
+            say(getBrainOwner(me).name + " wakes up.", owner, "see");
          }
          add(me, "conscious");
       }
@@ -228,7 +246,7 @@ parameters.catBrain = {
    functions : {
       thinkBored : function(me, body){
          if (Math.random() < .25) {
-            pushGameText(body.name + " meows lazily");
+            say(body.name + " meows lazily", me, "say");
             return;
          }
 

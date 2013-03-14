@@ -123,6 +123,40 @@ parameters = {
       }
    },
 
+   attached_to : {
+      values: function(me) {
+         if (is(me.attached_to)) {
+            return "moves where " + me.attached_to.name + " moves.";
+         } else {
+            return "";
+         }
+      },
+      functions : {
+         "tick" : function(me) {
+            if (is(me.attached_to)) {
+               if (me.attached_to.x !== me.x || me.attached_to.y !== me.y || getRoom(me)) {
+                  moveObject(me, me.attached_to.x, me.attached_to.y);
+               }
+
+               if (getRoom(me.attached_to) !== getRoom(me)) {
+                  
+               }
+            }
+         }
+      }
+   },
+
+   iridescent : {
+      revealed_by : [ "look" ],
+      values: { 0: "shimmers curiously in the light" },
+      types : [ "physical", "aesthetic" ],
+      functions : {
+         "tick" : function(me) {
+            me.color = pickRandom(["red", "green", "blue", "white", "black", "purple", "orange", "yellow"]);
+         }
+      }
+   },
+
    boiling : {
       values: {
          1: "is boiling"
@@ -781,12 +815,17 @@ parameters = {
                return;
             }
             if (Math.random() < .8) {
+               var on = pickRandom(me.contents);
+               if (on === undefined) return;
                say(creature.name + " vomits up " + on.name, me, "see");
                moveObject(on, creature.x, creature.y, true);
                setContainer(on, creature.parent);
             } else {
                say(creature.name + " retches", me, "say");
             }
+         },
+         "jostle" : function(me) {
+            call(me, 'gag');
          }
       }
    },

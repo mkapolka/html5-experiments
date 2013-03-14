@@ -45,6 +45,7 @@ templates.catBrain = {
    hunterThink: 1,
    wanderBored: 1,
    stressedAttack : 1,
+   escapeArtist: 1,
    catBrain: 1,
 
    hungry: 1
@@ -76,6 +77,7 @@ templates.mouseBrain = {
    form: "brain",
    material: "flesh",
    wanderBored: 1,
+   escapeArtist: 1
 }
 
 templates.mouseHeart = {

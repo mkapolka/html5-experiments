@@ -85,13 +85,13 @@ function setHoverTextTile(room, tileX, tileY)
 {
    var objects = getObjectsAt(room, tileX, tileY);
 
-   var text = "";
+   var text = $("<ul>You see here...</ul>");
    
    for (var i in objects)
    {
       if (objects[i].name !== undefined)
       {
-         text += objects[i].name + "\n";
+         text.append($("<li>" + objects[i].name + "</li>"));
       }
    }
 
@@ -188,6 +188,9 @@ function doAction(action)
             pushGameText("You examine " + object.name);
             pushGameText(revealToHTML(reveal(object, ["look", "feel"])));
             deselectTile(selected_tile);
+
+            doTick();
+            updateTileText();
          });
          return;
       break;
@@ -204,6 +207,8 @@ function doAction(action)
             pickup(object);
             updateTileText();
             deselectTile(selected_tile);
+            doTick();
+            updateTileText();
          });
          return;
       break;
@@ -218,6 +223,7 @@ function doAction(action)
             } else {
                putDownIn(object);
             }
+            doTick();
             updateTileText();
             deselectTile(selected_tile);
          });
@@ -232,6 +238,7 @@ function doAction(action)
             if (heldActions[action.type] !== undefined) {
                showObjectButtons(getCurrentRoom(), action.x, action.y, function(object) {
                   heldActions[action.type](player.holding, player, object);
+                  doTick();
                   updateTileText();
                   deselectTile(selected_tile);
                });
@@ -256,6 +263,9 @@ function doAction(action)
          if (names.length > 1) {
             showOptions(names, objects, function(object) {
                object.actionsStanding[action.type](object, player); 
+               doTick();
+               updateTileText();
+               deselectTile();
             });
          } else {
             if (objects.length == 0) return;
@@ -278,7 +288,7 @@ function showObjectButtons(room, x, y, callback)
 {
    var names = [];
    var objects = [];
-   var objects_here = getObjectsAt(room, x, y);
+   var objects_here = getObjectsAt(room, x, y, true);
 
    for (var o in objects_here)
    {
@@ -410,7 +420,7 @@ function putDownIn(container)
 
 function setHoverText(input)
 {
-   $("#hovertext").text(input);
+   $("#hovertext").html(input);
 }
 
 function updateTileText(room)

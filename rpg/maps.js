@@ -40,7 +40,7 @@ maps.library = {
    "#B.......#",
    "#........#",
    "#........#",
-   "#......>.#",
+   "#XXX...>.#",
    "##########",
    ],
 
@@ -48,8 +48,17 @@ maps.library = {
       "B" : "bio_book",
       "C" : "chem_book",
       ">" : door("garden"),
-      "#" : "stone_wall"
+      "#" : "stone_wall",
+      "X" : "box"
    }
+}
+
+templates.box = {
+   name: "a box",
+   material: "wood",
+   contents: [],
+   openable: 1,
+   open: 1
 }
 
 templates.stone_wall = {
