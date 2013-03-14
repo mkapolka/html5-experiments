@@ -17,18 +17,18 @@ parameters = {
       actionsStanding : {
          "Open" : function(me, caller) {
             moveAdjacentTo(caller, me);
-            if (me.open === undefined || me.open < 1)
+            if (not(me.open))
             {
                pushGameText("You open the " + me.name);
-               me.open = 1;
+               add(me, "open");
             }
          },
          "Close" : function(me, caller) {
             moveAdjacentTo(caller, me);
-            if (me.open > 0)
+            if (is(me.open))
             {
                pushGameText("You close the " + me.name);
-               me.open = 0;
+               sub(me, "open");
             }
          }
       }
@@ -58,17 +58,14 @@ parameters = {
                   }
                }
             }
-         }//jostle
+         },//jostle
       }//functions
    },
 
    //Object can be boiled. Higher value = requires more heat
    boilable: {
       values: {
-         0: "would boil at room temperature",
-         5: "would boil",
-         6: "would boil if heated",
-         10: "could conceivably boil"
+         1: "can be boiled"
       },
       default: 10,
       types: [ "physical" ],
@@ -78,7 +75,7 @@ parameters = {
                if (isVisible(me)) {
                   pushGameText(me.name + " starts to boil");
                }
-               me.boiling = 1;
+               add(me, "boiling");
             }
          }
       }
@@ -150,14 +147,9 @@ parameters = {
       ],
       functions : {
          "burn" : function(me) {
-            if (me.burning === undefined) {
+            if (not(me.burning)) {
                pushGameText(me.name + " bursts into flames!");
-               me.burning = 1;
-            }
-
-            if (me.burning < 1) {
-               pushGameText(me.name + " bursts into flames!");
-               me.burning += 1;
+               add(me, "burning");
             }
          }
       }
@@ -180,7 +172,7 @@ parameters = {
             {
                for (var o in me.contents) {
                   call(me.contents[o], "heat");
-                  me.contents[o].hot = 1;
+                  add(me.contents[o], "hot");
                }
             }
 
@@ -189,14 +181,14 @@ parameters = {
                //Sometimes heat parent
                if (Math.random() < .1) {
                   call(me.parent, "heat");
-                  me.parent.hot = 1;
+                  add(me.parent, "hot");
                }
             }
 
             //Small chance to cool down every tick
             if (Math.random() < .1) {
                call(me, "cool");
-               me.hot = undefined;
+               sub(me, "hot");
             }
          } 
       }
@@ -214,7 +206,7 @@ parameters = {
       ],
       functions : {
          "tick": function(me) {
-            var touching = getTouchingObjects(me);
+            var touching = getObjectsTouching(me);
             for (var i in touching) {
                if (!touching[i].hot) touching[i].hot = 1;
                call(touching[i], "heat", me.burning);
@@ -225,7 +217,7 @@ parameters = {
 
             if (Math.random() < .2 && not(me.flameEternal)) {
                pushGameText(me.name + "'s flames die out");
-               me.burning -= 1;
+               sub(me, "burning");
             }
          }
       }
@@ -302,7 +294,7 @@ parameters = {
       ],
       functions : {
          "tick" : function(me) {
-            if (me.hard > 1) {
+            if (is(me.hard)) {
                me.hard = undefined;
                me.soft = undefined;
             }
@@ -310,8 +302,16 @@ parameters = {
          "slash" : function(me, attacker) {
             if (is(me.contents) && not(me.open)) {
                if (me.open === undefined) me.open = 0;
-               pushGameText(me.name + " is slashed open!");
-               me.open +=1;
+               pushGameText(me.name + " bursts open!");
+               add(me, "open");
+               return;
+            }
+
+            if (is(me.open)) {
+               pushGameText(me.name + " is torn to shreds!");
+               var contents = me.contents.slice();
+               deleteObject(me);
+               scatter(contents, 3);
             }
          }
       }
@@ -335,37 +335,9 @@ parameters = {
       ],
       functions : {
          "tick" : function(me) {
-            if (me.large > 0){
-               me.large = undefined;
+            if (me.big){
+               me.big = undefined;
                me.small = undefined;
-            }
-         }
-      }
-   },
-
-   //TODO: Going purist about durability for now, but maybe revisit
-   //and turn durability into integer logic? Durability is an understandable
-   //enough concept after all
-   durability: {
-      values: {
-         1: "is hanging onto existence by a string",
-         5: "is quite damaged",
-         10: ""
-      },
-      revealed_by: [
-         "look",
-      ],
-      default: 10,
-      functions : {
-         "damage" : function(me, amount)
-         {
-            me.durability -= amount;
-
-            if (me.durability < 0)
-            {
-               pushGameText(me.name + " is destroyed!");
-               deleteObject(me);
-               updateTileText(room);
             }
          }
       }
@@ -384,17 +356,17 @@ parameters = {
       default: 0,
       functions : {
          "tick" : function(me) {
-            var touching = getTouchingObjects(me);
+            var touching = getObjectsTouching(me);
             for (t in touching) {
-               if (touching[t].isLiquid > 0 && touching[t].hot > 0) {
+               if (is(touching[t].isLiquid) && is(touching[t].hot)) {
                   pushGameText(me.name + " dissolves into " + touching[t].name);
-                  dissolve(me, touching[t]);
+                  mergeObject(touching[t], me, ["chemical"]);
                   return;
                }
             }
          },
          "jostle" : function(me, jostler, amount) {
-            var touching = getTouchingObjects(me);
+            var touching = getObjectsTouching(me);
             for (var t in touching) {
                if (touching[t].isLiquid > 0) {
                   pushGameText(me.name + " dissolves into " + touching[t].name);
@@ -485,29 +457,27 @@ parameters = {
                pushGameText(me.name + " spills out of the " + me.parent.name);
                removeFromContainer(me);
             }
-            var to = getTouchingObjects(me);
-            for (var i in to) {
-               to[i].wet = 0;
-               call(to[i], "dampen");
+
+            var touching = getObjectsTouching(me);
+            for (var t in touching) {
+               if (is(touching[t].isLiquid)) {
+                  mergeBySize(me, touching[t], ["chemical", "physical"]);
+                  return;
+               } else {
+                  if (is(touching[t].open) && is(touching[t].contents)) {
+                     pushGameText(me.name + " fills the " + touching[t].name);
+                     var dup = duplicateObject(me);
+                     setContainer(dup, touching[t]);
+                  }
+
+                  add(touching[t], "wet");
+               }
             }
          }, 
-         "enteredContainer" : function(me, container) {
-            if (not(container.watertight) && not(container.isRoom)) {
+         "jostle" : function(me) {
+            if (is(me.parent.open) && not(me.parent.isRoom)) {
                pushGameText(me.name + " spills out of the " + me.parent.name);
-               removeFromContainer(me); 
-               return;
-            }
-
-            var touching = getTouchingObjects(me);
-
-            for (var t in touching) {
-               if (touching[t].isLiquid > 0) {
-                  var combined = combineLiquids(me, touching[t]);
-                  deleteObject(me);
-                  deleteObject(touching[t]);
-                  setContainer(combined, me.parent);
-                  return;
-               }
+               removeFromContainer(me);
             }
          }
       }
@@ -527,24 +497,19 @@ parameters = {
                amount = .5;
             }
             if (Math.random() < amount) {
-               call(me, "dry");
+               sub(me, "wet");
             }
          }, 
-         "dampen" : function(me) {
-            if (me.wet < 1) {
-               me.wet = 1;
-               me.flammable -= 1;
-            }
+         "add" : function(me) {
+            sub(me, "flammable");
          },
-         "dry" : function(me) {
-            if (me.wet >= 1) {
-               me.wet -= 1;
-               me.flammable += 1;
-            }
+
+         "sub" : function(me) {
+            add(me, "flammable");
          },
          "burn" : function(me) {
             pushGameText(me.name + " sizzles");
-            call(me, "dry");
+            sub(me, "wet");
          }
       }
    },
@@ -570,6 +535,13 @@ parameters = {
       actionsHeld : {
            "Pour" : function(me, caller, target) {
               if (target.isTile) {
+                 if (not(me.open)) {
+                     if (not(me.openable)) {
+                        pushGameText("You cannot pour because it isn't open and you can't open it!");
+                     } else {
+                        add(me, "open");
+                     }
+                 }
                  moveAdjacentTo(caller, target);
                  pushGameText("You pour the contents of " + me.name + " out onto the floor");
 
@@ -618,12 +590,17 @@ parameters = {
          "look", "biology_knowledge", "necromancy_knowledge"
       ],
       functions : {
-         "kill" : function(me) {
-            if (is(me.living)) {
-               if (isVisible(me)) {
-                  pushGameText("The life drains out of " + me.name);
+         "tick" : function(me) {
+            if (not(me.oxygenated) && is(me.living)) {
+               if (Math.random() < .5) {
+                  sub(me, "living");
                }
-               me.living -= 1;
+            }
+         },
+
+         "sub" : function(me) {
+            if (isVisible(me)) {
+               pushGameText("The life drains out of " + me.name);
             }
          }
       }
@@ -637,20 +614,9 @@ parameters = {
          "biology_knowledge", "chemistry_knowledge"
       ],
       functions : {
-         "heartbeat" : function(me){
-            if (not(me.oxygenated)) {
-               me.oxygenated = 1;
-            }
-         }, 
          "tick" : function(me) {
-            if (not(me.oxygenated)) {
-               if (Math.random() < .1) {
-                  call(me, "kill");
-               }
-            } else {
-               if (Math.random() < .1 && is(me.oxygenated)) {
-                  me.oxygenated -= 1;
-               }
+            if (Math.random() < .1) {
+               sub(me, "oxygenated");
             }
          }
       }
@@ -675,7 +641,8 @@ parameters = {
                   //Does this creature have blood?
                   contents.some(function(a){ return is(a.isBlood); })) {
                   //Then pump it!
-                  contents.forEach(function(a) { call(a, "heartbeat"); });
+                  contents.forEach(function(a) { call(a, "heartbeat"); add(a, "oxygenated") });
+                  add(me.parent, "oxygenated");
                   call(me.parent, "heartbeat");
                }
             }
@@ -704,13 +671,11 @@ parameters = {
                return;
             }
 
-            if (Math.random() < .25) {
+            if (Math.random() < .4) {
                pushGameText(me.name + " slashes at " + target.name + "!");
                call(target, "slash", me);
                return;
             }
-
-            pushGameText(me.name + " slashes " + getPronoun(me) + " at " + target.name + ", but it is ineffective.");
          }
       }
    },
@@ -730,29 +695,14 @@ parameters = {
                      pushGameText("Your stomach growls");
                   }
                }
-            }
-         }
-      }
-   },
 
-   //Humors
-   calm : {
-      values: {
-         1: "is calm"
-      },
-      revealed_by : [
-         "psychology_knowledge", "look",
-      ],
-      functions : {
-         "calm" :  function(me) {
-            if (is(me.angry)) {
-               me.angry = 0;
-            } else {
-               if (not(me.calm)) {
-                  me.calm = 1;
+               if (not(me.oxygenated)) {
+                  if (Math.random() < .25) {
+                     pushGameText("You feel lightheaded.");
+                  }
                }
             }
-         },
+         }
       }
    },
 
@@ -764,13 +714,9 @@ parameters = {
          "psychology_knowledge", "look",
       ],
       functions : {
-         "anger" : function(me) {
-            if (is(me.calm)) {
-               me.calm = 0;
-            } else {
-               if (not(me.angry)) {
-                  me.angry = 1;
-               }
+         "tick" : function(me) {
+            if (Math.random() < .3) {
+               sub(me, "anger");
             }
          }
       }
@@ -844,7 +790,6 @@ parameters = {
       ],
       functions : {
          "addedObject" : function(me, what) {
-            console.log(what);
             if (what.material === materials.flesh) {
                if (not(what.digestible)) {
                   if (what.digestible === undefined) what.digestible = 0;
@@ -897,22 +842,20 @@ parameters = {
          "heat" : function(me) {
             if (is(me.hot) && Math.random() < .1) {
                if (not(me.cooked) && not(me.burnt)) {
-                  if (me.nutritious === undefined) me.nutritious = 0;      
-                  if (me.edible === undefined) me.edible = 0;      
                   if (isVisible(me)) {
                      pushGameText(me.name + " begins to smell tasty!");
                   }
-                  me.edible += 1;
-                  me.nutritious += 1;
-                  me.cooked = 1;
+                  add(me, "edible");
+                  add(me, "nutritious");
+                  add(me, "cooked");
                   call(me, "cook");
                } else {
                   if (isVisible(me)) {
                      pushGameText(me.name + " begins to smell burnt.");
                   }
-                  me.cooked = 0;
-                  me.nutritious -= 1;
-                  me.burnt = 1;
+                  sub(me, "cooked");
+                  sub(me, "nutritious");
+                  add(me, "burnt");
                   call(me, "cook");
                }
             }
@@ -1000,9 +943,8 @@ parameters = {
    spawnsMice : {
       functions : {
          "tick" : function(me) {
-            console.log("tick");
             if (Math.random() < .1) {
-               var room = getObjectRoom(me);
+               var room = getRoom(me);
                if (room !== undefined) {
                   var mouse = createObjectFromTemplate("mouse");
                   moveObject(mouse, me.x, me.y);
@@ -1016,5 +958,35 @@ parameters = {
 
    obscured : {
       //
+   },
+
+   rooted: {
+      values : {
+         1: "cannot be moved",
+      },
+      revealed_by : [
+         "look"
+      ],
+      types : [
+         "physical"
+      ]
+   },
+
+   isSpring : {
+      functions: {
+         "tick":function(me) {
+            var haswater = false;
+            for (var c in me.contents) {
+               if (me.contents[c].material === "water") {
+                  haswater = true;
+               }
+            }
+
+            if (!haswater) {
+               var water = createObjectFromTemplate("water");
+               setContainer(water, me);
+            }
+         }
+      }
    }
 }

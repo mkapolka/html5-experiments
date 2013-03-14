@@ -46,11 +46,13 @@ templates.catBrain = {
    name: "a cat brain",
    form: "brain",
    material: "flesh",
-   hungry: 1,
    carnivoreFilter: 1,
    sizeFilter: 1,
    hunterThink: 1,
    wanderBored: 1,
+   stressedAttack : 1,
+
+   hungry: 1
 }
 
 templates.catHeart = {
@@ -78,7 +80,7 @@ templates.mouseBrain = {
    name: "a mouse brain",
    form: "brain",
    material: "flesh",
-   wanderBored: 1
+   wanderBored: 1,
 }
 
 templates.mouseHeart = {
@@ -195,4 +197,14 @@ templates.tea_kettle = {
 templates.mouse_hole = {
    name: "a mouse hole",
    form: "mouse_hole",
+}
+
+templates.well = {
+   name : "a well",
+   form: "well",
+   material: "stone",
+   contents: ["water"],
+   isSpring: 1,
+   big: 1,
+   rooted : 1,
 }

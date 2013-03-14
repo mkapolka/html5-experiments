@@ -1,7 +1,7 @@
 //Game methods
 
 var room_contents = [
-   "lavender", "tea_kettle", "fire_pit", "chem_book", "poppy", "coriander", "tea", "collander", "cat", "bio_book", "mouse", "mouse_hole"
+   "lavender", "tea_kettle", "fire_pit", "chem_book", "poppy", "coriander", "tea", "collander", "cat", "bio_book", "mouse", "mouse_hole", "well"
 ];
 
 //Object that contains the data for the currently loaded room
@@ -380,17 +380,24 @@ function showLocationButtons(room, x, y, callback)
 
 function pickup(object)
 {
-   if (player.holding !== undefined) {
-      pushGameText("You are already holding " + player.holding.name + ", you cannot pick up " + object.name + "!");
-      return;
-   }
-
    if (object.big > 0) {
       pushGameText("That is too big to carry!");
       return;
    }
 
-   pushGameText("You pick up " + object.name);
+   if (is(object.isLiquid) || is(object.isGas) || is(object.rooted)) {
+      pushGameText("You cannot pick that up!");
+      return;
+   }
+
+   if (player.holding !== undefined) {
+      pushGameText("You swap " + player.holding.name + " for " + object.name);
+      moveObject(player.holding, object.x, object.y);
+      player.holding.obscured = 0;
+      player.holding = undefined;
+   } else {
+      pushGameText("You pick up " + object.name);
+   }
    moveObject(object, player.x, player.y);
    player.holding = object;
    object.obscured = 1;

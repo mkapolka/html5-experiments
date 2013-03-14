@@ -100,6 +100,10 @@ forms = {
 
    "mouse_hole" : {
       spawnsMice : 1,
+   },
+
+   "well" : {
+      symbol: "W"
    }
 }
 

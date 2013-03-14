@@ -25,6 +25,75 @@ function is(value) {
    }
 }
 
+function add(object, paramName) {
+   if (object[paramName] === undefined) {
+      object[paramName] = 0;
+   }
+   
+   object[paramName]++;
+
+   if (parameters[paramName]!==undefined 
+      && parameters[paramName].functions !== undefined
+      && parameters[paramName].functions.add !== undefined) {
+      parameters[paramName].functions.add(object);
+   }
+}
+
+function sub(object, paramName) {
+   if (object[paramName] === undefined) {
+      object[paramName] = 0;
+   }
+   
+   object[paramName]--;
+
+   if (parameters[paramName]!==undefined 
+      && parameters[paramName].functions !== undefined
+      && parameters[paramName].functions.sub !== undefined) {
+      parameters[paramName].functions.sub(object);
+   }
+}
+
+function call(caller, method, dotdotdot)
+{
+   for (var p in caller)
+   {
+      if (caller.isDestroyed) return;
+      if (parameters[p] !== undefined && parameters[p].functions !== undefined)
+      {
+         if (parameters[p].functions[method] !== undefined)
+         {
+            var m = parameters[p].functions[method];
+            switch (arguments.length - 2)
+            {
+               case 0:
+                  m(caller);
+               break;
+
+               case 1:
+                  m(caller, arguments[2]);
+               break;
+
+               case 2:
+                  m(caller, arguments[2], arguments[3]);
+               break;
+
+               case 3:
+                  m(caller, arguments[2], arguments[3], arguments[4]);
+               break;
+
+               case 4:
+                  m(caller, arguments[2], arguments[3], arguments[4], arguments[5]);
+               break;
+
+               default:
+                  console.log("call() cannot take more than 4 parameters at the moment");
+               break;
+            }
+         }
+      }
+   }
+}
+
 //Places the object inside the container.
 //The container should be an object or room.
 function setContainer(object, container)
@@ -61,6 +130,7 @@ function setContainer(object, container)
    call(object, "enteredContainer", container);
 }
 
+//Moves this object into the container above itself
 //Return true if successful, false otherwise
 function removeFromContainer(object) {
    if (not(object.parent.isRoom)) {
@@ -78,6 +148,14 @@ function moveObject(object, x, y, callActions)
    object.x = x;
    object.y = y;
 
+   var room = getRoom(object);
+   if (room !== undefined) {
+      if (object.x < 0) object.x = 0;
+      if (object.y < 0) object.y = 0;
+      if (object.x > room.width) object.x = room.width - 1;
+      if (object.y > room.height) object.y = room.height - 1;
+   }
+
    if (object.contents !== undefined)
    {
       for (var i in object.contents)
@@ -92,73 +170,6 @@ function moveObject(object, x, y, callActions)
       if (Math.random() < .3) {
          call(object, "jostle");
       }
-   }
-}
-
-function open(object)
-{
-   if (object.openable)
-   {
-      if (object.watertight !== undefined)
-      {
-         object.max_watertightness = object.watertight;
-         object.watertight = 0;
-      }
-      object.opened = 10;
-   }
-}
-
-function close(object)
-{
-   if (object.openable)
-   {
-      if (object.watertight !== undefined)
-      {
-         object.watertight = object.max_watertightness;
-      }
-      object.opened = 0;
-   }
-}
-
-function getObjectCapacity(object)
-{
-   var size = object.size === undefined?1:object.size;
-
-   return Math.pow(size, 2);
-}
-
-//Containers can fit up to 3 objects one size class lower than it and unlimited
-//two size classes lower
-function canContainerFit(object, container)
-{
-   if (container.small > 1) return false;
-
-   var capacity = 3;
-
-   if (container.big > 1) {
-      for (var c in container.contents) {
-         if (!container.contents[c].small) {
-            capacity -= 1;
-         }
-      }
-
-      return capacity >= 0;
-   }
-
-   if (!container.small) {
-      for (var c in container.contents) {
-         capacity -= 1;
-      }
-
-      return capacity >= 0;
-   }
-}
-
-function canObjectEnter(object, container) {
-   if (!canContainerFit(object, container)) return false;
-
-   if (!container.open) {
-      return false;
    }
 }
 
@@ -189,92 +200,62 @@ function duplicateObject(object)
    return output;
 }
 
-function splitObject(object, newsize)
+//Removes the object from the game. And optionally 
+//keeps the contents around. keepContents defaults to true
+//because that is the expected default in the game logic
+function deleteObject(object, keepContents)
 {
-   var os = object.size !== undefined?1:object.size;
-   if (newsize > os) return undefined;
-
-   var output = duplicateObject(object);
-   output.size = newsize;
-   object.size -= newsize;
-
-   return output;
-}
-
-function deleteObject(object)
-{
+   if (keepContents === undefined) keepContents = true;
    if (object.parent === undefined) return;
    for (var v in object.contents) {
-      removeFromContainer(object.contents[v]);
+      if (keepContents) {
+         removeFromContainer(object.contents[v]);
+      }
    }
    object.isDestroyed = true;
    setContainer(object, undefined);
-
 }
 
-//Merges objects
-function mergeObjects(object_a, object_b, add_size)
-{
-   for (var k in object_b)
-   {
-      if (typeof object_b[k] === "number")
-      {
-         if (object_a[k] !== undefined)
-         {
-            object_a[k] += object_b[k]; 
-            object_a[k] /= 2;
-         } else {
-            object_a[k] = object_b[k];
-         }
-      } else if (typeof object_b[k] === "string")
-      {
-         if (object_a[k] === undefined)
-         {
-            object_a[k] = object_b[k];
-         }
-      }
-   }
-
-   if (add_size)
-   {
-      object_a.size += object_b.size;
+//Iterates over all the properties of the two object, calling callback on every property
+//the callback has the form: callback(valueA, valueB) and its return value will become objectTo's
+//value for that property
+function combine(objectTo, objectFrom, callback) {
+   for (var o in objectFrom) {
+      objectTo[o] = callback(objectTo[o], objectFrom[o]);
    }
 }
 
-//Combines two object and returns the result
-//Callback is a method that takes the form (objectA, objectB, propertyName, typeof)
-//and returns the value of propertyName that the output should have
-function combineObjects(output, objectA, objectB, callback) {
-   var parms = {};
-   for (var i in objectA) {
-      parms[i] = typeof(objectA[i]);
-   }
-   for (var i in objectB) {
-      parms[i] = typeof(objectB[i]);
-   }
-
-   for (var i in parms) {
-      output[i] = callback(objectA, objectB, i, parms[i]);
-   }
-
-   return output;
-}
 
 //Combines two objects, but only the parameters that match a certain type
 //Callback takes the form function(objectA, objectB, propertyName, typeof)
-function combineByType(output, objectA, objectB, type, callback) {
+function combineByType(output, objectA, objectB, types, callback) {
+   if (callback === undefined) {
+      callback = function(a, b, prop, type) {
+         switch (type) {
+            case "number":
+               if (a[prop] === undefined) return b[prop];
+               if (b[prop] === undefined) return a[prop];
+               return Math.max(a[prop],b[prop]);
+            break;
+
+            default:
+               return a[prop];
+            break;
+         }
+      }
+   }
    var parms = {};
 
    var paramsA = [];
    var paramsB = [];
-   if (typeof type === "array") {
-      for (var a in type) {
-         paramsA = paramsA.join(getParamsByType(objectA, type[a]));
-         paramsB = paramsB.join(getParamsByType(objectB, type[a]));
+   if (typeof types === "array") {
+      for (var a in types) {
+         paramsA = paramsA.join(getParamsByType(objectA, types[a]));
+         paramsB = paramsB.join(getParamsByType(objectB, types[a]));
       }
    } else {
-      paramsA = getParamsByType(objectA, type);
-      paramsB = getParamsByType(objectB, type);
+      paramsA = getParamsByType(objectA, types);
+      paramsB = getParamsByType(objectB, types);
    }
 
    for (var i in paramsA) {
@@ -291,66 +272,60 @@ function combineByType(output, objectA, objectB, type, callback) {
    return output;
 }
 
-//Dissolve a into b, transferring any properties with type 'type'
-function dissolve(objectA, objectB) {
-   output = combineByType(objectB, objectA, objectB, "chemical", function(a, b, param, type) {
-      switch (type) {
-         case "number":
-            if (a[param] === undefined) {
-               return b[param];
-            }
-            if (b[param] === undefined) {
-               return a[param];
-            }
-            return Math.max(a[param] , b[param]);
-         break;
-
-         default:
-            return a[param];
-         break;
-      }
-   });
-
-   deleteObject(objectA);
-   
-   return objectB;
+//Merges object B into object A, destroying objectB and transferring
+//properties with the specified types into object A
+function mergeObject(objectA, objectB, types) {
+   combineByType(objectA, objectA, objectB, types);
+   deleteObject(objectB);
+   return objectA;
 }
 
-//When two liquids meet this is the method that should be called
-function combineLiquids(objectA, objectB) {
-   var s1 = Math.pow(paramSafeGet(objectA, "size"), 3);
-   var s2 = Math.pow(paramSafeGet(objectB, "size"), 3);
-   if (s1 > s2) {
-      ratio = s2 / s1;
-   } else {
-      ratio = s1 / s2;
+function mergeBySize(objectA, objectB, types) {
+   var cmp = sizeCompare(objectA, objectB);
+   var bigger, smaller;
+   switch(cmp) {
+      case -1:
+         bigger = objectB;
+         smaller = objectA;
+      break;
 
-      var b = objectB;
-      objectB = objectA;
-      objectA = b;
+      case 0:
+         if (Math.random() < .5) {
+            bigger = objectB;
+            smaller = objectA;
+         } else {
+            bigger = objectA;
+            smaller = objectB;
+         }
+      break;
+
+      case 1:
+         bigger = objectA;
+         smaller = objectB;
+      break;
    }
-   objectA.temp = {};
-   objectA.temp.s1 = s1;
-   objectA.temp.s2 = s2;
-   objectA.temp.ratio = ratio;
 
-   //ObjA should always be the larger one
-   var output = combineObjects(objectA, objectB, function(objA, objB, prop, type) {
-      if (prop == "size") {
-         return Math.pow(objA.temp.s1 + objA.temp.s2, 1/3);
-      }
-      switch (type) {
-         case "number":
-            return (objA[prop] * (1 - ratio)) + (objB[prop] * ratio);
-         break;
+   return mergeObject(bigger, smaller, types);
+}
 
-         default:
-            return objA[prop];
-         break;
-      }
-   });
-
-   return output;
+//Returns -1 if objectA < objectB,
+//Returns 1 if objectA > objectB
+//Returns 0 if objectA == objectB
+function sizeCompare(objectA, objectB) {
+   if (is(objectA.big) && not(objectB.big)) {
+      return 1; 
+   } else 
+   if (is(objectB.big) && not(objectB.big)) {
+      return -1;
+   } else 
+   if (is(objectA.small) && not(objectB.small)) {
+      return -1;
+   } else 
+   if (is(objectB.small) && not(objectA.small)) {
+      return 1;
+   } else {
+      return 0;
+   }
 }
 
 function submerge(liquid, submersed)
@@ -443,84 +418,9 @@ function revealToHTML(revelation)
    return output;
 }
 
-function call(caller, method, dotdotdot)
-{
-   for (var p in caller)
-   {
-      if (caller.isDestroyed) return;
-      if (parameters[p] !== undefined && parameters[p].functions !== undefined)
-      {
-         if (parameters[p].functions[method] !== undefined)
-         {
-            var m = parameters[p].functions[method];
-            switch (arguments.length - 2)
-            {
-               case 0:
-                  m(caller);
-               break;
 
-               case 1:
-                  m(caller, arguments[2]);
-               break;
-
-               case 2:
-                  m(caller, arguments[2], arguments[3]);
-               break;
-
-               case 3:
-                  m(caller, arguments[2], arguments[3], arguments[4]);
-               break;
-
-               case 4:
-                  m(caller, arguments[2], arguments[3], arguments[4], arguments[5]);
-               break;
-
-               default:
-                  console.log("call() cannot take more than 4 parameters at the moment");
-               break;
-            }
-         }
-      }
-   }
-}
-
-function paramInvert(param_name, value)
-{
-   if (parameters[param_name] !== undefined && parameters[param_name].max_value !== undefined)
-   {
-      return value - parameters[param_name].max_value;
-   }
-
-   return 10 - value;
-}
-
-function paramSafeGet(who, param_name)
-{
-   if (who[param_name] !== undefined)
-   {
-      return who[param_name];
-   } else {
-      if (parameters[param_name] !== undefined)
-      {
-         if (parameters[param_name].default !== undefined)
-         {
-            return parameters[param_name].default;
-         } else {
-            return DEFAULT_DEFAULT_VALUE;
-         }
-      }
-   }
-}
-
-function get_string_template(param_name, param_value)
-{
-   if (parameters[param_name] !== undefined)
-   {
-      return parameters[param_name][param_value];
-   }
-}
-
-function get_param_types(param_name)
+//Returns the types of the parameter with this name
+function getParamTypes(param_name)
 {
    if (parameters[param_name] === undefined) return [];
    return parameters[param_name].types;
@@ -532,7 +432,7 @@ function getParamsByType(object, type)
    var output = [];
    for (var i in object)
    {
-      var types = get_param_types(i);
+      var types = getParamTypes(i);
       if (types !== undefined)
       {
          if (types.indexOf(type) !== -1)
@@ -653,7 +553,7 @@ function createObjectFromTemplate(name)
    return output;
 }
 
-function getTouchingObjects(object) {
+function getObjectsTouching(object) {
    if (object.parent === undefined) return [];
    if (object.parent.isRoom) return [];
    if (object.parent.contents !== undefined)
@@ -703,12 +603,6 @@ function getStandingActions(object) {
    return output;
 }
 
-function objectCombine(objectTo, objectFrom, callback) {
-   for (var o in objectFrom) {
-      objectTo[o] = callback(objectTo[o], objectFrom[o]);
-   }
-}
-
 function setForm(object, form) {
    //accept either string or object form
    if (typeof form === "string") {
@@ -745,7 +639,7 @@ function setSubTemplate(object, stName, stValue) {
 
    //Subtract the old values
    if (object[stName] !== undefined) {
-      objectCombine(object, object[stName], function(to, from) {
+      combine(object, object[stName], function(to, from) {
          switch (typeof from) {
             case "number":
                if (to === undefined) to = 0;
@@ -782,7 +676,7 @@ function setSubTemplate(object, stName, stValue) {
    object[stName] = stValue;
 
    //Add the new values
-   objectCombine(object, object[stName], function(to, from) {
+   combine(object, object[stName], function(to, from) {
       switch (typeof from) {
          case "number":
             if (to === undefined) to = 0;
@@ -828,12 +722,12 @@ function isVisible(object) {
    return true;
 }
 
-function getObjectRoom(object) {
+function getRoom(object) {
    //Topmost object is the best we can do
-   if (is(object.isRoom) || object === undefined) {
+   if (object === undefined || is(object.isRoom)) {
       return object;
    } else {
-      return getObjectRoom(object.parent);
+      return getRoom(object.parent);
    }
 }
 
@@ -949,4 +843,57 @@ function getBrainOwner(brain) {
    if (!(brain.parent)) return undefined;
    if (not(brain.parent.animated)) return undefined;
    return brain.parent;
+}
+
+function canCarry(object) {
+   if (not(object.isLiquid) && not(object.isGas) && not(object.rooted)) {
+      return true;
+   }
+
+   return false;
+}
+
+function scatter(objects, range) {
+   for (var v in objects) {
+      moveRandom(objects[v], range);
+   }
+}
+
+function moveRandom(object, range) {
+      var dx = Math.floor(-range + (Math.random() * range * 2));
+      var dy = Math.floor(-range + (Math.random() * range * 2));
+      var tx = object.x + dx;
+      var ty = object.y + dy;
+
+      moveObject(object, tx, ty);
+}
+
+function getNearest(object) {
+   if (not(object.parent.isRoom)) {
+      return pickRandom(object.parent.contents);
+   }
+
+   var contents = object.parent.contents.slice();
+
+   var sorted = contents.sort(function(a,b) {
+      var ax = Math.abs(a.x - object.x); 
+      var ay = Math.abs(a.y - object.y); 
+      var bx = Math.abs(b.x - object.x); 
+      var by = Math.abs(b.y - object.y); 
+      
+      var ad = ax * ax + ay * ay;
+      var bd = bx * bx + by * by;
+
+      if (ad > bd) {
+         return 1;
+      } else if (ad < bd) {
+         return -1;
+      } else {
+         return 0;
+      }
+   });
+
+   sorted.splice(sorted.indexOf(object), 1);
+
+   return sorted[0];
 }
