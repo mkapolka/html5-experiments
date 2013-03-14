@@ -19,7 +19,7 @@ parameters = {
             moveAdjacentTo(caller, me);
             if (not(me.open))
             {
-               pushGameText("You open the " + me.name);
+               say("You open the " + me.name, me, "do");
                add(me, "open");
             }
          },
@@ -27,7 +27,7 @@ parameters = {
             moveAdjacentTo(caller, me);
             if (is(me.open))
             {
-               pushGameText("You close the " + me.name);
+               say("You close the " + me.name, me, "do");
                sub(me, "open");
             }
          }
@@ -54,7 +54,7 @@ parameters = {
                {
                   if (Math.random() < .5)
                   {
-                     pushGameText(me.contents[i].name + " falls out of " + me.name);
+                     say(me.contents[i].name + " falls out of " + me.name, me, "see");
                      fallouts.push(me.contents[i]);
                   }
                }
@@ -77,7 +77,7 @@ parameters = {
          "tick": function(me) {
             if (is(me.hot) && not(me.boiling)) {
                if (isVisible(me)) {
-                  pushGameText(me.name + " starts to boil");
+                  say(me.name + " starts to boil", me, "see");
                }
                add(me, "boiling");
             }
@@ -104,7 +104,7 @@ parameters = {
          },
          "pickup" : function(me, object) {
             if (not(me.holding)) {
-               pushGameText(me.name + " picks up " + object.name);
+               say(me.name + " picks up " + object.name, me, "see");
                moveObject(object, me.x, me.y);
                me.holding = object;
                object.obscured = 1;
@@ -113,7 +113,7 @@ parameters = {
          //Drop whatever this being is holding
          "drop" : function(me) {
             if (is(me.holding)) {
-               pushGameText(me.name + " drops " + me.holding.name);
+               say(me.name + " drops " + me.holding.name, me, "see");
                moveObject(me.holding, me.x, me.y, true);
                setContainer(me.holding, me.parent);
                me.holding.obscured = 0;
@@ -135,7 +135,7 @@ parameters = {
          "tick" : function(me) {
             if (is(me.boiling) && Math.random() < .1) {
                if (isVisible(me)) {
-                  pushGameText(me.name + " boils away!");
+                  say(me.name + " boils away!", me, "show");
                }
                deleteObject(me);
             }
@@ -157,7 +157,7 @@ parameters = {
       functions : {
          "burn" : function(me) {
             if (not(me.burning)) {
-               pushGameText(me.name + " bursts into flames!");
+               say(me.name + " bursts into flames!", me, "see");
                add(me, "burning");
             }
          }
@@ -225,7 +225,7 @@ parameters = {
             call(me, "burn", me.burning);
 
             if (Math.random() < .2 && not(me.flameEternal)) {
-               pushGameText(me.name + "'s flames die out");
+               say(me.name + "'s flames die out", me, "see");
                sub(me, "burning");
             }
          }
@@ -260,7 +260,7 @@ parameters = {
             if (me.burning > 0) {
                if (Math.random() < .001) {
                   deleteObject(this);
-                  pushGameText(me.name + " was consumed by fire!");
+                  say(me.name + " was consumed by fire!", me, "see");
                }
             }
          }
@@ -311,13 +311,13 @@ parameters = {
          "slash" : function(me, attacker) {
             if (is(me.contents) && not(me.open)) {
                if (me.open === undefined) me.open = 0;
-               pushGameText(me.name + " bursts open!");
+               say(me.name + " bursts open!", me, "see");
                add(me, "open");
                return;
             }
 
             if (is(me.open)) {
-               pushGameText(me.name + " is torn to shreds!");
+               say(me.name + " is torn to shreds!", me, "see");
                var contents = me.contents.slice();
                deleteObject(me);
                scatter(contents, 3);
@@ -368,7 +368,7 @@ parameters = {
             var touching = getObjectsTouching(me);
             for (t in touching) {
                if (is(touching[t].isLiquid) && is(touching[t].hot)) {
-                  pushGameText(me.name + " dissolves into " + touching[t].name);
+                  say(me.name + " dissolves into " + touching[t].name, me, "see");
                   mergeObject(touching[t], me, ["chemical"]);
                   return;
                }
@@ -378,7 +378,7 @@ parameters = {
             var touching = getObjectsTouching(me);
             for (var t in touching) {
                if (is(touching[t].isLiquid)) {
-                  pushGameText(me.name + " dissolves into " + touching[t].name);
+                  say(me.name + " dissolves into " + touching[t].name, me, "see");
                   mergeObject(touching[t], me, ["chemical"]);
                   return;
                }
@@ -462,8 +462,9 @@ parameters = {
       functions : {
          "tick" : function(me) {
             if (not(me.parent.watertight) && not(me.parent.isRoom)) {
-               pushGameText(me.name + " spills out of the " + me.parent.name);
+               var container = me.parent
                removeFromContainer(me);
+               say(me.name + " spills out of the " + container.name, me, "see");
             }
 
             var touching = getObjectsTouching(me);
@@ -473,7 +474,7 @@ parameters = {
                   return;
                } else {
                   if (is(touching[t].open) && is(touching[t].contents)) {
-                     pushGameText(me.name + " fills the " + touching[t].name);
+                     say(me.name + " fills the " + touching[t].name, me, "see");
                      var dup = duplicateObject(me);
                      setContainer(dup, touching[t]);
                   }
@@ -484,8 +485,9 @@ parameters = {
          }, 
          "jostle" : function(me) {
             if (is(me.parent.open) && not(me.parent.isRoom)) {
-               pushGameText(me.name + " spills out of the " + me.parent.name);
+               var cont = me.parent;
                removeFromContainer(me);
+               say(me.name + " spills out of the " + cont.name, me, "see");
             }
          }
       }
@@ -516,7 +518,7 @@ parameters = {
             add(me, "flammable");
          },
          "burn" : function(me) {
-            pushGameText(me.name + " sizzles");
+            say(me.name + " sizzles", me, "see");
             sub(me, "wet");
          }
       }
@@ -545,13 +547,13 @@ parameters = {
               if (target.isTile) {
                  if (not(me.open)) {
                      if (not(me.openable)) {
-                        pushGameText("You cannot pour because it isn't open and you can't open it!");
+                        say("You cannot pour because it isn't open and you can't open it!", me, "do");
                      } else {
                         add(me, "open");
                      }
                  }
                  moveAdjacentTo(caller, target);
-                 pushGameText("You pour the contents of " + me.name + " out onto the floor");
+                 say("You pour the contents of " + me.name + " out onto the floor", me, "do");
 
                  //copy array to avoid concurrent modification error
 
@@ -564,12 +566,12 @@ parameters = {
                  return;
               }
               if (target.contents !== undefined) {
-                 pushGameText("You pour the contents of " + me.name + " into " + target.name);  
+                 say("You pour the contents of " + me.name + " into " + target.name, me, "do");  
                  for (var v in me.contents) {
                     setContainer(me.contents[v], target);
                  }
               } else {
-                 pushGameText("Cannot pour " + me.name + " into that!");
+                 say("Cannot pour " + me.name + " into that!", me, "do");
               }
            }
         }
@@ -608,7 +610,7 @@ parameters = {
 
          "sub" : function(me) {
             if (isVisible(me)) {
-               pushGameText("The life drains out of " + me.name);
+               say("The life drains out of " + me.name, me, "see");
             }
          }
       }
@@ -669,18 +671,18 @@ parameters = {
          "attack" : function(me, target) {
             moveAdjacentTo(me, target);
             if (is(target.soft)) {
-               pushGameText(me.name + " slashes at " + target.name + "!");
+               say(me.name + " slashes at " + target.name + "!", me, "see");
                call(target, "slash", me);
                return;
             }
 
             if (is(target.hard)) {
-               pushGameText(me.name + " tries to slash at " + target.name + ", but it is too hard!");
+               say(me.name + " tries to slash at " + target.name + ", but it is too hard!", me, "see");
                return;
             }
 
             if (Math.random() < .4) {
-               pushGameText(me.name + " slashes at " + target.name + "!");
+               say(me.name + " slashes at " + target.name + "!", me, "say");
                call(target, "slash", me);
                return;
             }
@@ -700,13 +702,13 @@ parameters = {
             if (me.parent !== undefined && not(me.parent.isRoom)) {
                if (is(me.parent.hungry)) {
                   if (Math.random() < .1) {
-                     pushGameText("Your stomach growls");
+                     say("Your stomach growls", me, "feel");
                   }
                }
 
                if (not(me.oxygenated)) {
                   if (Math.random() < .25) {
-                     pushGameText("You feel lightheaded.");
+                     say("You feel lightheaded.", me, "feel");
                   }
                }
             }
@@ -779,11 +781,11 @@ parameters = {
                return;
             }
             if (Math.random() < .8) {
-               pushGameText(creature.name + " vomits up " + on.name);
+               say(creature.name + " vomits up " + on.name, me, "see");
                moveObject(on, creature.x, creature.y, true);
                setContainer(on, creature.parent);
             } else {
-               pushGameText(creature.name + " retches");
+               say(creature.name + " retches", me, "say");
             }
          }
       }
@@ -851,7 +853,7 @@ parameters = {
             if (is(me.hot) && Math.random() < .1) {
                if (not(me.cooked) && not(me.burnt)) {
                   if (isVisible(me)) {
-                     pushGameText(me.name + " begins to smell tasty!");
+                     say(me.name + " begins to smell tasty!", me, "see");
                   }
                   add(me, "edible");
                   add(me, "nutritious");
@@ -859,7 +861,7 @@ parameters = {
                   call(me, "cook");
                } else {
                   if (isVisible(me)) {
-                     pushGameText(me.name + " begins to smell burnt.");
+                     say(me.name + " begins to smell burnt.", me, "say");
                   }
                   sub(me, "cooked");
                   sub(me, "nutritious");
@@ -900,7 +902,7 @@ parameters = {
          //TODO: Held/Stationary actions
          "Eat" : function(me, caller, target){
             moveAdjacentTo(caller, me);
-            pushGameText("You eat " + me.name);
+            say("You eat " + me.name, me, "do");
             eat(caller, me);
          }
       }
@@ -957,7 +959,7 @@ parameters = {
                   var mouse = createObjectFromTemplate("mouse");
                   moveObject(mouse, me.x, me.y);
                   setContainer(mouse, room);
-                  pushGameText(mouse.name + " scurries out of " + me.name);
+                  say(mouse.name + " scurries out of " + me.name, me, "see");
                }
             }
          }

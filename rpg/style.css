@@ -93,6 +93,13 @@ h1 {
 
 .tiles {
    border-collapse: collapse;
+
+   overflow: hidden;
+   table-layout: fixed;
+   white-space: nowrap;
+
+   width: 320px;
+   height: 320px;
    /*border: 1px dashed black;*/
 }
 
@@ -104,6 +111,13 @@ h1 {
    padding: 0;
    margin: 0;
    text-align: center;
+
+   overflow: hidden;
+}
+
+.tile {
+   display: block;
+   overflow: hidden;
 }
 
 .tiles td:hover {

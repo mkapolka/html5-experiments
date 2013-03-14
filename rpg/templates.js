@@ -1,18 +1,12 @@
 templates = {};
 
-room =  {
-   name: "The Room",
-   form: "room",
-   contents: [],
-   isRoom: true
-}
-
 templates.player = {
    name: "You, the player",
    form: "person",
+   color: "black",
    material: "flesh",
    contents: ["playerStomach", "playerHeart", "playerBrain", "blood"],
-   holding: undefined
+   holding: undefined,
 }
 
 templates.playerStomach = {
@@ -109,6 +103,12 @@ templates.chem_book = {
    form : "book",
    material : "paper",
    revealType: "alchemy_knowledge"
+}
+
+templates.psych_book = {
+   name: "a psychology textbook",
+   form: "book",
+   material: "paper",
 }
 
 templates.bio_book = {
@@ -213,3 +213,31 @@ templates.sponge = {
    contents: [],
    small: 1
 }
+
+templates.door = {
+   name : "a door",
+   form: "door",
+   symbol: ">",
+   big: 1,
+   rooted: 1,
+   actionsStanding : {
+      "Go through" : function(me, caller, target) {
+         var destination = rooms[me.destination];
+         if (destination !== undefined) {
+            say("You travel to " + destination.name, me, "do");
+            for (var v in destination.contents) {
+               var d = destination.contents[v];
+               if (d.destination !== undefined && rooms[d.destination] === getRoom(caller)) {
+                  moveObject(caller, d.x, d.y, false);
+               }
+            }
+            setContainer(caller, destination);
+            $("h1").text(destination.name);
+         } else {
+            console.log("Couldn't find room " + me.destination + " so I couldn't send ", caller, " there!");
+            say("You stub your toe on the threshold and trip.", me, "do");
+         }
+      }
+   }
+}
+

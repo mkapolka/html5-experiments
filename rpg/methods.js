@@ -171,6 +171,7 @@ function moveObject(object, x, y, callActions)
          call(object, "jostle");
       }
    }
+
 }
 
 //Warning: shallow copies arrays!
@@ -348,6 +349,7 @@ function submerge(liquid, submersed)
 //reveal method
 function reveal(object, method)
 {
+   if (typeof method === "string") method = [method];
    var output = [];
    output[0] = object.name + "...";
    var props_revealed = 0;
@@ -355,7 +357,9 @@ function reveal(object, method)
    {
       if (parameters[k] !== undefined && parameters[k].revealed_by !== undefined)
       {
-         if (parameters[k].revealed_by.indexOf(method) !== -1)
+         if (parameters[k].revealed_by.some(function(a) {
+            return method.indexOf(a) !== -1;
+         }))
          {
             //Functions for describing non-number values
             if (typeof parameters[k].values == "function") {
@@ -471,6 +475,14 @@ function moveAdjacentTo(mover, other)
 
 function doTick(room)
 {
+   //Tick all rooms by default
+   if (room === undefined) {
+      for (var v in rooms) {
+         doTick(rooms[v]);
+      }
+      return;
+   }
+
    for (var i in room.contents) {
       function callTick(obj)
       {
@@ -699,27 +711,27 @@ function setSubTemplate(object, stName, stValue) {
             return to;
          break;
 
-         case "string":
-            return to;
-         break;
-
          default:
+            if (to === undefined) return from;
+            if (from === undefined) return to;
             return to;
          break;
       }
 });
 }
 
-function isVisible(object) {
-   if (is(object.parent.isRoom)) {
-      return true;
+function isVisible(object, seer) {
+   if (getRoom(object) == getCurrentRoom()) {
+      if (is(object.parent.isRoom)) {
+         return true;
+      }
+
+      if (not(object.parent.open)) {
+         return false;   
+      }
    }
 
-   if (not(object.parent.open)) {
-      return false;   
-   }
-
-   return true;
+   return false;
 }
 
 function getRoom(object) {
@@ -896,4 +908,63 @@ function getNearest(object) {
    sorted.splice(sorted.indexOf(object), 1);
 
    return sorted[0];
+}
+
+function isWithin(who, target, range) {
+   var dx = Math.abs(who.x - target.x);
+   var dy = Math.abs(who.y - target.y);
+   var dt = Math.sqrt(dx * dx + dy * dy);
+
+   return range < dt;
+}
+
+//Was pushGameText originally,
+//this allows an object to notify the player that something
+//happened. "wavelengths" is a property that allows for filtering
+function say(message, sender, wavelengths) {
+   if (!sender) {
+      console.log("I won't say anything if I don't have a sender.");
+   }
+
+   if (typeof wavelengths === "string") {
+      wavelengths = [wavelengths];
+   }
+   
+   var push = false;
+   wavelengths.forEach(function(a) {
+      switch (a) {
+         case "say":
+            if (isVisible(sender, getPlayer())){
+               if (is(sender.parent.isRoom)) {
+                  push = true;
+               } else {
+                  if (isWithin(sender, getPlayer(), 3)) {
+                     push =  true;
+                  }
+               }
+            }
+         break;
+
+         case "see":
+            if (isVisible(sender, getPlayer())) {
+               push = true;
+            }
+         break;
+
+         //Something the player did, always show
+         case "do":
+            push = true;
+         break;
+
+         case "feel":
+            if (not(getPlayerBrain().numb)) {
+               return true;
+            }
+         break;
+      }
+   });
+
+   if (push) {
+      pushGameText(message);
+   }
 }

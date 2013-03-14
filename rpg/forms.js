@@ -107,6 +107,15 @@ forms = {
 
    "sponge" : {
       symbol: "S"
+   },
+
+   "door" : {
+      symbol: ">"
+   },
+
+   wall : {
+      name: "wall",
+      symbol: "#",
    }
 }
 
@@ -115,18 +124,21 @@ materials = {
       name: "plant matter",
       flammable : 1,
       phlogiston: 1,
+      color: "green"
    },
    "wood" : {
       name: "wood",
       flammable: 1,
       phlogiston: 1,
+      color: "brown"
    },
    "metal" : {
       name: "metal",
       flammable: -1,
       watertight: 1,
       dense: 1,
-      hard: 1
+      hard: 1,
+      color: "gray"
    },
    "flesh" : {
       name: "flesh",
@@ -135,13 +147,15 @@ materials = {
       soft: 1,
       oxygenated: 1,
       living: 1,
+      color: "orange"
    },
    "stone" : {
       name: "stone",
       watertight: 1,
       hard: 1,
       dense: 1,
-      flammable: -1
+      flammable: -1,
+      color: "black",
    },
    "paper" : {
       name: "paper",
@@ -149,22 +163,26 @@ materials = {
       flammable: 1,
       phlogiston: 1,
       light: 1,
+      color: "white",
    },
    "water" : {
       name: "water",
       isLiquid: 1,
       flammable: -1,
       boilable: 1,
+      color: "blue"
    },
    "blood" : {
       name: "blood",
       isLiquid: 1,
       isBlood: 1,
-      boilable: -1
+      boilable: -1,
+      color: "red"
    },
    "sponge" : {
       name: "sponge",
       watertight: 1,
+      color: "yellow",
       actionsHeld : {
          "Sop" : function(me, caller, target) {
             if (is(target.isLiquid)) {

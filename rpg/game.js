@@ -7,51 +7,38 @@ var room_contents = [
 //Object that contains the data for the currently loaded room
 //(Walls and Objects)
 var room;
+var current_room;
+var player;
 
 var current_action = undefined;
 var selected_tile = undefined;
 
-function setupRoom(width, height)
-{
-   var output = room;
-
-   room.width = width;
-   room.height = height;
-
-   //Initialize data grid
-   output.data = [];
-   for (var w = 0; w < width; w++){
-      var column = [];
-      for (var h = 0; h < height; h++){
-         var cell = {};
-         column.push(cell);
-      }
-      output.data.push(column);
-   }
-   
+function setupGrid(room) {
    //Initialize html table
    var table = $("<table class='tiles noselect'></table>");
-   for (var w = 0; w < width; w++)
+   for (var w = 0; w < room.width; w++)
    {
       var row = $("<tr></tr>");
-      for (var h = 0; h < height; h++)
+      for (var h = 0; h < room.height; h++)
       {
          var td = $("<td></td>");
+         var div = $("<div></div>");
+         div.addClass("x" + w + " y" + h);
+         div.addClass("tile");
          td[0].x = w;
          td[0].y = h;
+         td.append(div);
          row.append(td);
-         output.data[w][h].cell = td[0];
       }
       table.append(row);
    }
-   output.table = table;
 
-   $("#tiles_container").append(output.table);
+   $("#tiles_container").append(table);
 
    $(".tiles td").hover(function() {
       if (selected_tile === undefined)
       {
-         setHoverTextTile(room, this.x, this.y);
+         setHoverTextTile(getCurrentRoom(), this.x, this.y);
       }
    });
 
@@ -61,7 +48,7 @@ function setupRoom(width, height)
       {
          selected_tile = $(this)[0];
          $(this).addClass("selected");
-         selectTile($(this)[0], room);
+         selectTile($(this)[0], getCurrentRoom());
       } else {
          if (selected_tile !== undefined)
          {
@@ -70,8 +57,6 @@ function setupRoom(width, height)
          }
       }
    });
-
-   return output;
 }
 
 function getObjectsAt(room, x, y, contents)
@@ -143,8 +128,7 @@ function showActionButtons(room, x, y)
    if (objects_here.length > 0)
    {
       actions.push("Get");
-      actions.push("Look");
-      actions.push("Feel");
+      actions.push("Examine");
 
       for (var o in objects_here) {
          var standingActions = getStandingActions(objects_here[o]);
@@ -196,22 +180,16 @@ function doAction(action)
          deselectTile(selected_tile);
       break;
 
-      case "Look":
-         showObjectButtons(room, action.x, action.y, function(object) {
-            pushGameText(revealToHTML(reveal(object, "look")));
-            deselectTile(selected_tile);
-         });
-      break;
-
-      case "Feel":
-         showObjectButtons(room, action.x, action.y, function(object) {
+      case "Examine":
+         showObjectButtons(getCurrentRoom(), action.x, action.y, function(object) {
             if (!isAdjacent(player.x, player.y, object.x, object.y)){
                moveAdjacentTo(player, object);
             } 
-            pushGameText(revealToHTML(reveal(object, "feel")));
-            updateTileText(room);
+            pushGameText("You examine " + object.name);
+            pushGameText(revealToHTML(reveal(object, ["look", "feel"])));
             deselectTile(selected_tile);
          });
+         return;
       break;
 
       case "Wait":
@@ -219,18 +197,19 @@ function doAction(action)
       break;
 
       case "Get":
-         showObjectButtons(room, action.x, action.y, function(object) {
+         showObjectButtons(getCurrentRoom(), action.x, action.y, function(object) {
             if (!isAdjacent(player.x, player.y, object.x, object.y)){
                moveAdjacentTo(player, object);
             } 
             pickup(object);
-            updateTileText(room);
+            updateTileText();
             deselectTile(selected_tile);
          });
+         return;
       break;
 
       case "Put":
-         showLocationButtons(room, action.x, action.y, function(object) {
+         showLocationButtons(getCurrentRoom(), action.x, action.y, function(object) {
             if (!isAdjacent(player.x, player.y, object.x, object.y)){
                moveAdjacentTo(player, object);
             } 
@@ -239,9 +218,10 @@ function doAction(action)
             } else {
                putDownIn(object);
             }
-            updateTileText(room);
+            updateTileText();
             deselectTile(selected_tile);
          });
+         return;
       break;
 
       default:
@@ -250,9 +230,9 @@ function doAction(action)
             var heldActions = getHeldActions(player.holding);
 
             if (heldActions[action.type] !== undefined) {
-               showObjectButtons(room, action.x, action.y, function(object) {
+               showObjectButtons(getCurrentRoom(), action.x, action.y, function(object) {
                   heldActions[action.type](player.holding, player, object);
-                  updateTileText(room);
+                  updateTileText();
                   deselectTile(selected_tile);
                });
                return;
@@ -261,7 +241,7 @@ function doAction(action)
 
          //Standing action
          var object = undefined;
-         var objectsHere = getObjectsAt(room, action.x, action.y, false);
+         var objectsHere = getObjectsAt(getCurrentRoom(), action.x, action.y, false);
          var names = [];
          var objects = [];
          
@@ -282,7 +262,7 @@ function doAction(action)
             var standingActions = getStandingActions(objects[0]);
             console.log(standingActions);
             standingActions[action.type](objects[0], player);
-            updateTileText(room);
+            updateTileText();
             deselectTile(selected_tile);
          }
 
@@ -290,8 +270,8 @@ function doAction(action)
       break;
    }
 
-   doTick(room);
-   updateTileText(room);
+   doTick();
+   updateTileText();
 }
 
 function showObjectButtons(room, x, y, callback)
@@ -401,7 +381,7 @@ function pickup(object)
    moveObject(object, player.x, player.y);
    player.holding = object;
    object.obscured = 1;
-   updateTileText(room);
+   updateTileText();
 }
 
 function putDownAt(x,y){
@@ -412,7 +392,7 @@ function putDownAt(x,y){
       setContainer(player.holding, player.parent);
       player.holding.obscured = 0;
       player.holding = undefined;
-      updateTileText(room);
+      updateTileText();
    }
 }
 
@@ -424,7 +404,7 @@ function putDownIn(container)
       setContainer(player.holding, container);
       player.holding.obscured = 0;
       player.holding = undefined;
-      updateTileText(room);
+      updateTileText();
    }
 }
 
@@ -435,16 +415,29 @@ function setHoverText(input)
 
 function updateTileText(room)
 {
+   if (room === undefined) {
+      room = getCurrentRoom();
+   }
    //game objects
-   var tiles = $(".tiles td");
+   var tiles = $(".tile");
    tiles.text(".");
+   tiles.css("color", "black");
 
    for (var i in room.contents)
    {
       var object = room.contents[i];
 
       if (not(object.obscured)) {
-         $(room.data[object.x][object.y].cell).text(getGlyph(object));
+         var tile = $(".x" + object.x + ".y" + object.y);
+         var bft = tile.text();
+         if (tile.text().charAt(0) !== "@") {
+            tile.text(getGlyph(object));
+            tile.css("color", object.color);
+         }
+
+         if (bft !== ".") {
+            tile.append("+");
+         }
       }
    }
 }
@@ -475,54 +468,23 @@ function makeOptions(strings, options, callback)
    return container;
 }
 
-function click_object(object)
-{
-   if (current_action === "look")
-   {
-      pushGameText(revealToHTML(reveal(game_objects[object], "look")));
-   }
-
-   if (current_action === "feel")
-   {
-      pushGameText(revealToHTML(reveal(game_objects[object], "feel")));
-   }
-
-   if (current_action = "grab")
-   {
-      currently_held = game_objects[object];
-      pushGameText("You pick up the " + game_objects[object].name);
-      $("#grabbutton").hide();
-      $("#putbutton").show();
-   }
-
-   if (current_action = "put")
-   {
-      currently_held = undefined;
-      $("#putbutton").hide();
-      $("#grabbutton").show();
-   }
-
-   $("#objects").hide();
-   $("#actions").show();
-
-   doTick(room);
-}
-
 function game_init()
 {
-   room = setupRoom(10, 10);
-
-   for (var i in room_contents)
-   {
-      var object = createObjectFromTemplate(room_contents[i]);
-      moveObject(object, Math.floor(Math.random() * 10), Math.floor(Math.random() * 10), false);
-      setContainer(object, room);
+   //Initialize all the rooms
+   rooms = [];
+   for (var i in maps) {
+      rooms[i] = (makeRoom(maps[i]));
    }
 
-   player = createObjectFromTemplate("player");
-   player.x = Math.floor(Math.random() * 10);
-   player.y = Math.floor(Math.random() * 10);
-   setContainer(player, room);
+   setupGrid(getCurrentRoom());
 
-   updateTileText(room);
+   updateTileText(current_room);
+}
+
+function getPlayer() {
+   return player; 
+}
+
+function getCurrentRoom() {
+   return getRoom(getPlayer());
 }
