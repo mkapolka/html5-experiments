@@ -343,6 +343,7 @@ parameters = {
             }
          },
          "slash" : function(me, attacker) {
+            if (not(me.soft)) return;
             if (is(me.contents) && not(me.open)) {
                say(me.name + " bursts open!", me, "see");
                add(me, "open");
@@ -691,25 +692,23 @@ parameters = {
 
    blood_pumping : {
       values: {
-         1: "provides its host with blood"
+         1: "has a heartbeat"
       },
       revealed_by : [
          "biology_knowledge"
       ],
       functions : {
          "tick" : function(me) {
-            if (me.parent !== undefined && not(me.parent.isRoom)) {
-               var contents = me.parent.contents;
-               
-               if (is(me.living) && 
-                  //Does this creature have blood?
-                  contents.some(function(a){ return is(a.isBlood); })) {
-                  //Then pump it!
-                  contents.forEach(function(a) { call(a, "heartbeat"); add(a, "oxygenated") });
-                  add(me.parent, "oxygenated");
-                  call(me.parent, "heartbeat");
-                  say(me.name + " pulses.", me, "see");
-               }
+            var contents = me.contents;
+            
+            if (is(me.living) && 
+                is(me.blood_pumping) && 
+               //Does this creature have blood?
+               me.contents.some(function(a){ return is(a.isBlood); })) {
+               //Then pump it!
+               contents.forEach(function(a) { call(a, "heartbeat"); add(a, "oxygenated") });
+               add(me, "oxygenated");
+               call(me, "heartbeat");
             }
          }
       }
@@ -807,15 +806,15 @@ parameters = {
                      call(me.contents[c], "churn");
                      call(me.contents[c], "digest", me);
                   } else {
-                     call(me, "gag", me.contents[c]);
+                     if (not(me.contents[c].isBlood)) {
+                        call(me, "gag", me.contents[c]);
+                     }
                   }
                }
             }
          },
          "eat" : function(me, eaten) {
-            if (me.parent && getBrain(me.parent)) {
-               sub(getBrain(me.parent), "hungry");
-            }
+            sub(me, "hungry");
 
             if (is(me.contents)) {
                setContainer(eaten, me);
@@ -833,21 +832,13 @@ parameters = {
       ],
       functions : {
          "gag" : function(me, on) {
-            var creature;
-            if (me.parent !== undefined && me.parent.parent !== undefined) {
-               creature = me.parent;
-            } else {
-               console.log("gagReflex.gag could not find containing creature!");
-               return;
-            }
             if (Math.random() < .8) {
                var on = pickRandom(me.contents);
                if (on === undefined) return;
-               say(creature.name + " vomits up " + on.name, me, "see");
-               moveObject(on, creature.x, creature.y, true);
-               setContainer(on, creature.parent);
+               say(me.name + " vomits up " + on.name, me, "see");
+               removeFromContainer(on);
             } else {
-               say(creature.name + " retches", me, "say");
+               say(me.name + " retches", me, "say");
             }
          },
          "jostle" : function(me) {
@@ -865,7 +856,7 @@ parameters = {
       ],
       functions : {
          "addedObject" : function(me, what) {
-            if (what.material === materials.flesh || is(what.isBlood)) {
+            if (what.material === materials.flesh) {
                if (not(what.digestible)) {
                   add(what, "digestible"); 
                }
@@ -895,6 +886,21 @@ parameters = {
       revealed_by : [
          "psychology_knowledge", "look"
       ],
+   },
+
+   lendsBloodPumping : {
+      functions : {
+         "enteredContainer" : function(me, container) {
+            if (!container) return;
+            if (not(container.isRoom)) {
+               add(container, "blood_pumping");
+            }
+         }, 
+         "leftContainer" : function(me, container) {
+            if (!container) return;
+            sub(container, "blood_pumping");
+         }
+      }
    },
 
    //Used to determine if an object is living in the 

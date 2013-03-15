@@ -761,21 +761,9 @@ function eat(who, target) {
    call(who, "eat", target);
 
    var eaten = false;
-   //Put the object into the creature's stomach
-   //and inform all its elements
-   for (var v in who.contents) {
-      if (is(who.contents[v].digesting)) {
-         setContainer(target, who.contents[v]);
-         eaten = true;
-      }
-      call(who.contents[v], "eat", target);
-   }
 
    //Not sent to a stomach, goes right into the body
-   if (!eaten) {
-      console.log(target, who);
-      setContainer(target, who);
-   }
+   setContainer(target, who);
 }
 
 function getPronoun(object, type) {

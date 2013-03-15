@@ -71,17 +71,7 @@ templates.psych_book = {
    name: "a psychology textbook",
    form: "book",
    material: "paper",
-   actionsHeld : {
-      "Psychoanalyze" : function(me, caller, target){
-         say("You try to get inside the mind of " + target.name, caller, "do");
-         for (var c in target.contents) {
-            if (is(target.contents[c].sentient)) {
-               pushGameText(revealToHTML(reveal(target.contents[c], "psychology_knowledge")));
-               return;
-            }
-         }
-      },
-   }
+   revealType: "psychology_knowledge",
 }
 
 templates.bio_book = {

@@ -8,20 +8,45 @@ forms = {
 
    "cat" : {
       symbol: "C",
-      contents : ["catBrain", "catHeart", "blood", "catStomach"],
+      contents : ["blood", "heart"],
       holding: undefined,
       clawed: 1,
       animated: 1,
       mobile: 1,
+      oxygenated: 1,
+      living: 1,
+
+      //bio
+      digesting: 1,
+
+      //AI
+      sentient: 1,
+      conscious: 1,
+      hungry: 1,
+      escapeArtist: 1,
+      stressedAttack: 1,
+      hunterThink: 1,
+      carnivoreFilter: 1,
+      wanderBored: 1,
+      catBrain: 1,
+      sizeFilter: 1,
    },
 
    "mouse" : {
       symbol: "M",
-      contents: ["mouseBrain", "mouseHeart", "blood", "mouseStomach"],
+      contents: ["blood"],
       small: 1,
       soft: 1,
       animated: 1,
       mobile: 1,
+
+      //AI
+      sentient: 1,
+      hungry: 1,
+      escapeArtist: 1,
+      stressedAttack: 1,
+      herbivoreNibble: 1,
+      wanderBored: 1,
    },
 
    "book" : {
@@ -84,7 +109,7 @@ forms = {
 
    "heart" : {
       symbol: "<3",
-      blood_pumping: 1,
+      lendsBloodPumping: 1,
    },
 
    "stomach" : {

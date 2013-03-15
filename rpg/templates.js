@@ -5,27 +5,14 @@ templates.player = {
    form: "person",
    color: "black",
    material: "flesh",
-   contents: ["playerStomach", "playerHeart", "playerBrain", "blood"],
+   contents: [],
    holding: undefined,
 }
 
-templates.playerStomach = {
-   name: "your stomach",
-   form: "stomach",
-   material: "flesh"
-}
-
-templates.playerHeart = {
-   name: "your heart",
+templates.heart = {
+   name: "a heart",
    form: "heart",
    material: "flesh"
-}
-
-templates.playerBrain = {
-   name: "your brain",
-   form: "brain",
-   material: "flesh",
-   playerThink : 1,
 }
 
 templates.cat = {
@@ -36,63 +23,12 @@ templates.cat = {
    male: true,
 }
 
-templates.catBrain = {
-   name: "a cat brain",
-   form: "brain",
-   material: "flesh",
-   carnivoreFilter: 1,
-   sizeFilter: 1,
-   hunterThink: 1,
-   wanderBored: 1,
-   stressedAttack : 1,
-   escapeArtist: 1,
-   catBrain: 1,
-
-   hungry: 1
-}
-
-templates.catHeart = {
-   name: "a cat heart",
-   form: "heart",
-   material: "flesh",
-}
-
-templates.catStomach = {
-   name: "a cat stomach",
-   form: "stomach",
-   material: "flesh",
-   carnivoreGag: 1,
-}
-
 templates.mouse = {
    name: "a field mouse",
    form: "mouse",
    material: "flesh",
    soft: 1,
    living: 1,
-}
-
-templates.mouseBrain = {
-   name: "a mouse brain",
-   form: "brain",
-   material: "flesh",
-   wanderBored: 1,
-   escapeArtist: 1,
-   herbivoreNibble: 1,
-   hungry: 1
-}
-
-templates.mouseHeart = {
-   name: "a mouse heart",
-   form: "heart",
-   material: "flesh",
-}
-
-templates.mouseStomach = {
-   name: "a mouse stomach",
-   form: "stomach",
-   material: "flesh",
-   herbivoreGag: 1,
 }
 
 templates.blood = {

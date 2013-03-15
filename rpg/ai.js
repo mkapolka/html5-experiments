@@ -3,33 +3,33 @@ parameters.sentient = {
       1: "is sentient"
    },
    revealed_by : [
-      "biology_knowledge", "psychology_knowledge"
+      "psychology_knowledge"
    ],
+   types: [ "psychological" ],
    functions : {
       "heartbeat" : function(me) {
-         var body = getBrainOwner(me);
          if (is(me.living) && is(me.conscious)) {
-            call(me, "think", body);
+            call(me, "think");
          } else {
             return;
          }
 
          if (is(me.hungry)) {
-            call(me, "thinkHungry", body);
+            call(me, "thinkHungry");
             return;
          }
 
          if (is(me.stressed)) {
-            call(me, "thinkStressed", body);
+            call(me, "thinkStressed");
             return;
          }
 
          if (is(me.happy)) {
-            call(me, "thinkHappy", body);
+            call(me, "thinkHappy");
             return;
          }
 
-         call(me, "thinkBored", body);
+         call(me, "thinkBored");
       },
       "pain" : function(me) {
          if (not(me.stressed)) {
@@ -51,9 +51,7 @@ parameters.hungry = {
          if (not(me.hungry)) {
             if (Math.random() < .1) {
                add(me, "hungry");
-               if (not(me.parent.isRoom)) {
-                  say(me.parent.name + "'s stomach growls", me.parent, "say");
-               }
+               say(me.name + "'s stomach growls", me, "say");
             }
          }
       },
@@ -68,10 +66,10 @@ parameters.stressed = {
       "psychology_knowledge"
    ],
    functions : {
-      "think" : function(me, body) {
+      "think" : function(me) {
          if (is(me.stressed)) {
             if (Math.random() < .3) {
-               say(getBrainOwner(me).name + " calms down.", body, "see");
+               say(me.name + " calms down.", body, "see");
                sub(me, "stressed");
             }
          }
@@ -83,14 +81,13 @@ parameters.escapeArtist = {
    values: { 1: "will escape if contained or grabbed" },
    revealed_by: [ "psychology_knowledge" ],
    functions : {
-      "think" : function(me, body) {
-         if (not(body.parent.isRoom)) {
-            call(body, "attack", body.parent);
+      "think" : function(me) {
+         if (not(me.parent.isRoom)) {
+            call(me, "attack", me.parent);
             add(me, "stress");
-            if (is(body.parent.open)) {
-               var cont = body.parent;
-               removeFromContainer(body);
-               say(body.name + " leaps out of " + cont.name, body, "see");
+            if (is(me.parent.open)) {
+               removeFromContainer(me);
+               say(me.name + " leaps out of " + me.parent.name, me, "see");
             }
          }
       }
@@ -102,15 +99,15 @@ parameters.stressedAttack = {
       1: "lashes out when stressed"
    },
    revealed_by : [
-      "biology_knowledge", "psychology_knowledge"
+      "psychology_knowledge"
    ],
    functions : {
-      thinkStressed : function(brain, body) {
-         var nearest = getNearest(body);
+      thinkStressed : function(brain) {
+         var nearest = getNearest(me);
 
-         call(body, "attack", nearest);
+         call(me, "attack", nearest);
 
-         moveRandom(body, 3);
+         moveRandom(me, 3);
       }
    }
 }
@@ -120,32 +117,31 @@ parameters.hunterThink = {
       1: "thinks like a hunter"
    },
    revealed_by : [
-      "biology_knowledge", "psychology_knowledge"
+      "psychology_knowledge"
    ],
    functions : {
       "thinkHungry" : function(me) {
-         var cat = getBrainOwner(me);
-         if (cat === undefined) return;
-
          //What tasty treats can I find?
-         var target = getTasty(me);
+         var target = pickRandom(getVisibleObjects(me).filter(function(a) {
+            return (a.material === materials.flesh || a.material === materials.blood) && sizeCompare(me, a) > 0;
+         }));
 
          if (target !== undefined) {
             if (is(target.animated)) {
                if (Math.random() < .25) {
-                  say(cat.name + " gobbles up the poor " + target.name, cat, "see");
-                  eat(cat, target);
+                  say(me.name + " gobbles up the poor " + target.name, me, "see");
+                  eat(me, target);
                   return;
                }
 
-               call(cat, "attack", target);
+               call(me, "attack", target);
                return;
             } else {
-               say(cat.name + " eats the " + target.name, cat, "see");
-               eat(cat, target);
+               say(me.name + " eats the " + target.name, me, "see");
+               eat(me, target);
             }
          } else {
-            say(cat.name + " leers around hungrily, looking for its next meal", cat, "see");
+            say(me.name + " leers around hungrily, looking for its next meal", me, "see");
          }
       }
    }
@@ -156,7 +152,7 @@ parameters.carnivoreFilter = {
       1: "likes to eat meat"
    },
    revealed_by : [
-      "biology_knowledge", "psychology_knowledge"
+      "psychology_knowledge"
    ],
    functions : {
       "filterFood" : function(me, foodlist) {
@@ -179,28 +175,28 @@ parameters.herbivoreNibble = {
       1: "nibbles on plants"
    },
    revealed_by : [
-      "biology_knowledge", "psychology_knowledge"
+      "biology_knowledge"
    ],
    functions : {
-      "thinkHungry" : function(me, body) {
-         if (is(body.mobile)) {
-            var plant = pickRandom(getVisibleObjects(body).filter(function(a) {
+      "thinkHungry" : function(me) {
+         if (is(me.mobile)) {
+            var plant = pickRandom(getVisibleObjects(me).filter(function(a) {
                return a.material === materials.plant;
             }));
 
             if (plant !== undefined) {
                if (not(plant.small)) {
-                  say(body.name + " nibbles on " + plant.name, body, "see");
+                  say(me.name + " nibbles on " + plant.name, me, "see");
                   var plantBit = duplicateObject(plant);
                   plantBit.name = "a bit of nibbled plant matter";
                   plantBit.big = 0;
                   plantBit.small = 1;
-                  eat(body, plantBit);
+                  eat(me, plantBit);
                } else {
-                  eat(body, plantBit);
+                  eat(me, plantBit);
                }
             } else {
-               say(body.name + " sniffs around hungrily", body, "see");
+               say(me.name + " sniffs around hungrily", me, "see");
             }
          }
       }
@@ -216,14 +212,8 @@ parameters.wanderBored = {
    ],
    functions : {
       "thinkBored" : function(me) {
-         var owner = getBrainOwner(me);
-         if (owner === undefined) return;
-
-         var room = getRoom(me);
-         if (room === undefined) return;
-
-         if (is(owner.mobile)) {
-            moveObject(me.parent, Math.floor(Math.random() * room.width), Math.floor(Math.random() * room.height), true);
+         if (is(me.mobile)) {
+            moveObject(me, Math.floor(Math.random() * getRoom(me).width), Math.floor(Math.random() * getRoom(me).height), true);
          }
       }
    }
@@ -240,17 +230,11 @@ parameters.sleeping = {
          }
       },
       "add" : function(me) {
-         var owner = getBrainOwner(me);
-         if (owner) {
-            say(getBrainOwner(me).name + " dozes off.", owner, "see");
-         }
+         say(me.name + " dozes off.", me, "see");
          sub(me, "conscious");
       },
       "sub" : function(me) {
-         var owner = getBrainOwner(me);
-         if (owner) {
-            say(getBrainOwner(me).name + " wakes up.", owner, "see");
-         }
+         say(getBrainOwner(me).name + " wakes up.", me, "see");
          add(me, "conscious");
       }
    }
@@ -261,9 +245,9 @@ parameters.catBrain = {
       1: "thinks like a cat"
    },
    functions : {
-      thinkBored : function(me, body){
+      thinkBored : function(me){
          if (Math.random() < .25) {
-            say(body.name + " meows lazily", me, "say");
+            say(me.name + " meows lazily", me, "say");
             return;
          }
 
@@ -311,10 +295,9 @@ parameters.sizeFilter = {
 }
 
 //functions
-function getTasty(brain) {
-   var body = getBrainOwner(brain);
-   var tasties = getRoom(brain).contents.slice();
-   tasties.splice(tasties.indexOf(body), 1);
-   call(brain, "filterFood", tasties);
+function getTasty(creature) {
+   var tasties = getRoom(creature).contents.slice();
+   tasties.splice(tasties.indexOf(creature), 1);
+   call(creature, "filterFood", tasties);
    return pickRandom(tasties);
 }
