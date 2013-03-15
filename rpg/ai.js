@@ -3,7 +3,7 @@ parameters.sentient = {
       1: "is sentient"
    },
    revealed_by : [
-      "biology_knowledge"
+      "biology_knowledge", "psychology_knowledge"
    ],
    functions : {
       "heartbeat" : function(me) {
@@ -30,6 +30,11 @@ parameters.sentient = {
          }
 
          call(me, "thinkBored", body);
+      },
+      "pain" : function(me) {
+         if (not(me.stressed)) {
+            add(me, "stressed");
+         }
       }
    }
 }
@@ -45,16 +50,11 @@ parameters.hungry = {
       "tick" : function(me) {
          if (not(me.hungry)) {
             if (Math.random() < .1) {
-               call(me, "hunger");
+               add(me, "hungry");
+               if (not(me.parent.isRoom)) {
+                  say(me.parent.name + "'s stomach growls", me.parent, "say");
+               }
             }
-         }
-      },
-      "hunger" : function(me) {
-         if (not(me.hungry)) {
-            if (isVisible(me)) {
-               say(me.name + "'s stomach growls", me, "say");
-            }
-            me.hungry = 1;
          }
       },
    }
@@ -115,22 +115,6 @@ parameters.stressedAttack = {
    }
 }
 
-parameters.satiable = {
-   values: {
-      1: "'s hunger can be sated"
-   },
-   revealed_by : [
-      "biology_knowledge", "psychology_knowledge"
-   ],
-   functions : {
-      "eat" : function(me, what) {
-         if (is(me.hungry)) {
-            me.hungry -= 1;
-         }
-      }
-   }
-}
-
 parameters.hunterThink = {
    values: {
       1: "thinks like a hunter"
@@ -185,6 +169,39 @@ parameters.carnivoreFilter = {
          });
          for (var f in fl2) {
             arrayRemove(foodlist, fl2[f]);
+         }
+      }
+   }
+}
+
+parameters.herbivoreNibble = {
+   values : {
+      1: "nibbles on plants"
+   },
+   revealed_by : [
+      "biology_knowledge", "psychology_knowledge"
+   ],
+   functions : {
+      "thinkHungry" : function(me, body) {
+         if (is(body.mobile)) {
+            var plant = pickRandom(getVisibleObjects(body).filter(function(a) {
+               return a.material === materials.plant;
+            }));
+
+            if (plant !== undefined) {
+               if (not(plant.small)) {
+                  say(body.name + " nibbles on " + plant.name, body, "see");
+                  var plantBit = duplicateObject(plant);
+                  plantBit.name = "a bit of nibbled plant matter";
+                  plantBit.big = 0;
+                  plantBit.small = 1;
+                  eat(body, plantBit);
+               } else {
+                  eat(body, plantBit);
+               }
+            } else {
+               say(body.name + " sniffs around hungrily", body, "see");
+            }
          }
       }
    }

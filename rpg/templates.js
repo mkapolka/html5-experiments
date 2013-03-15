@@ -77,7 +77,9 @@ templates.mouseBrain = {
    form: "brain",
    material: "flesh",
    wanderBored: 1,
-   escapeArtist: 1
+   escapeArtist: 1,
+   herbivoreNibble: 1,
+   hungry: 1
 }
 
 templates.mouseHeart = {
@@ -90,6 +92,7 @@ templates.mouseStomach = {
    name: "a mouse stomach",
    form: "stomach",
    material: "flesh",
+   herbivoreGag: 1,
 }
 
 templates.blood = {
@@ -98,26 +101,6 @@ templates.blood = {
    material: "blood",
    isBlood: 1,
    oxygenated: 1,
-}
-
-templates.chem_book = {
-   name : "a chemistry textbook",
-   form : "book",
-   material : "paper",
-   revealType: "alchemy_knowledge"
-}
-
-templates.psych_book = {
-   name: "a psychology textbook",
-   form: "book",
-   material: "paper",
-}
-
-templates.bio_book = {
-   name : "a biology textbook",
-   form : "book",
-   material : "paper",
-   revealType: "biology_knowledge"
 }
 
 templates.lavender = {
@@ -184,7 +167,7 @@ templates.collander = {
    contents : []
 }
 
-templates.tea_kettle = {
+templates.kettle = {
    form: "kettle",
    name: "tea kettle",
    material: "metal",

@@ -17,9 +17,8 @@ forms = {
 
    "mouse" : {
       symbol: "M",
-      contents: ["mouseBrain", "mouseHeart", "blood"],
+      contents: ["mouseBrain", "mouseHeart", "blood", "mouseStomach"],
       small: 1,
-      living: -1,
       soft: 1,
       animated: 1,
       mobile: 1,
@@ -81,7 +80,6 @@ forms = {
       symbol: "B",
       sentient: 1,
       conscious: 1,
-      satiable: 1
    },
 
    "heart" : {
@@ -94,7 +92,6 @@ forms = {
       digesting: 1,
       contents : [],
       gagReflex: 1,
-      sated: 0
    },
 
    "mouse_hole" : {
@@ -147,7 +144,15 @@ materials = {
       soft: 1,
       oxygenated: 1,
       living: 1,
-      color: "orange"
+      feelsPain: 1,
+      color: "#BB1111",
+      functions : {
+         "slash" : function(me) {
+            if (not(me.hard) && not(me.lacerated)) {
+               add(me, "lacerated");
+            }
+         },
+      }
    },
    "stone" : {
       name: "stone",
@@ -177,7 +182,7 @@ materials = {
       isLiquid: 1,
       isBlood: 1,
       boilable: -1,
-      color: "red"
+      color: "red",
    },
    "sponge" : {
       name: "sponge",
@@ -204,7 +209,6 @@ materials = {
                }
             }
 
-            console.log(arguments);
             moveAdjacentTo(caller, target);
             if (not(target.isTile)) {
                for (var v in out) {

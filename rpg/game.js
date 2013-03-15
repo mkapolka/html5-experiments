@@ -1,13 +1,7 @@
 //Game methods
 
-var room_contents = [
-   "lavender", "tea_kettle", "fire_pit", "chem_book", "poppy", "coriander", "tea", "collander", "cat", "bio_book", "mouse", "mouse_hole", "well", "sponge"
-];
-
 //Object that contains the data for the currently loaded room
 //(Walls and Objects)
-var room;
-var current_room;
 var player;
 
 var current_action = undefined;
@@ -57,28 +51,6 @@ function setupGrid(room) {
          }
       }
    });
-}
-
-function getObjectsAt(room, x, y, contents)
-{
-   var output = [];
-   for (var i in room.contents)
-   {
-      var obj = room.contents[i];
-      if (obj.x == x && obj.y == y)
-      {
-         output.push(obj);
-
-         if (contents && obj.contents !== undefined)
-         {
-            for (var o in obj.contents)
-            {
-               output.push(obj.contents[o]);
-            }
-         }
-      }
-   }
-   return output;
 }
 
 function setHoverTextTile(room, tileX, tileY)
@@ -270,7 +242,6 @@ function doAction(action)
          } else {
             if (objects.length == 0) return;
             var standingActions = getStandingActions(objects[0]);
-            console.log(standingActions);
             standingActions[action.type](objects[0], player);
             updateTileText();
             deselectTile(selected_tile);
@@ -288,7 +259,7 @@ function showObjectButtons(room, x, y, callback)
 {
    var names = [];
    var objects = [];
-   var objects_here = getObjectsAt(room, x, y, true);
+   var objects_here = getVisibleObjectsAt(x, y, getPlayer());
 
    for (var o in objects_here)
    {
@@ -488,7 +459,7 @@ function game_init()
 
    setupGrid(getCurrentRoom());
 
-   updateTileText(current_room);
+   updateTileText(getCurrentRoom());
 }
 
 function getPlayer() {

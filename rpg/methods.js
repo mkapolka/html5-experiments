@@ -55,6 +55,8 @@ function sub(object, paramName) {
 
 function call(caller, method, dotdotdot)
 {
+   if (typeof caller !== "object") console.log("bad caller in call(), arguments:", arguments);
+
    for (var p in caller)
    {
       if (caller.isDestroyed) return;
@@ -167,9 +169,9 @@ function moveObject(object, x, y, callActions)
    if (callActions) {
       call(object, "move", x, y);
 
-      if (Math.random() < .3) {
-         call(object, "jostle");
-      }
+      //if (Math.random() < .3) {
+         //call(object, "jostle");
+      //}
    }
 
 }
@@ -649,7 +651,6 @@ function setMaterial(object, material) {
 //Sets a sub-template. This is for things like forms and materials that
 //allow an object to inherit several properties
 function setSubTemplate(object, stName, stValue) {
-
    //Subtract the old values
    if (object[stName] !== undefined) {
       combine(object, object[stName], function(to, from) {
@@ -721,15 +722,27 @@ function setSubTemplate(object, stName, stValue) {
 });
 }
 
-function isVisible(object, seer) {
-   if (getRoom(object) == getCurrentRoom()) {
-      if (is(object.parent.isRoom)) {
-         return true;
-      }
+function getVisibleObjectsAt(x,y,seer) {
+   return getObjectsAt(getRoom(seer), x, y, true).filter(function(a) {
+      return isVisible(a, seer);
+   });
+}
 
-      if (not(object.parent.open)) {
-         return false;   
-      }
+function getVisibleObjects(seer) {
+   return getRoom(seer).contents.filter(function(a) {
+      return isVisible(a,seer);
+   });
+}
+
+function isVisible(object, seer) {
+   if (getRoom(object) !== getRoom(seer)) return false;
+
+   if (object.parent === seer.parent) {
+      return true;
+   }
+
+   if (object.parent.parent === seer.parent && is(object.parent.open)) {
+      return true;
    }
 
    return false;
@@ -760,6 +773,7 @@ function eat(who, target) {
 
    //Not sent to a stomach, goes right into the body
    if (!eaten) {
+      console.log(target, who);
       setContainer(target, who);
    }
 }
@@ -858,6 +872,18 @@ function getBrainOwner(brain) {
    return brain.parent;
 }
 
+function getPlayerBrain() {
+   return getBrain(getPlayer());
+}
+
+function getBrain(object) {
+   for (var v in object.contents) {
+      if (is(object.contents[v].sentient)) {
+         return object.contents[v];
+      }
+   }
+}
+
 function canCarry(object) {
    if (not(object.isLiquid) && not(object.isGas) && not(object.rooted)) {
       return true;
@@ -925,6 +951,7 @@ function isWithin(who, target, range) {
 function say(message, sender, wavelengths) {
    if (!sender) {
       console.log("I won't say anything if I don't have a sender.");
+      return;
    }
 
    if (typeof wavelengths === "string") {
@@ -968,4 +995,26 @@ function say(message, sender, wavelengths) {
    if (push) {
       pushGameText(message);
    }
+}
+
+function getObjectsAt(room, x, y, contents)
+{
+   var output = [];
+   for (var i in room.contents)
+   {
+      var obj = room.contents[i];
+      if (obj.x == x && obj.y == y)
+      {
+         output.push(obj);
+
+         if (contents && obj.contents !== undefined)
+         {
+            for (var o in obj.contents)
+            {
+               output.push(obj.contents[o]);
+            }
+         }
+      }
+   }
+   return output;
 }

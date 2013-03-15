@@ -344,19 +344,18 @@ parameters = {
          },
          "slash" : function(me, attacker) {
             if (is(me.contents) && not(me.open)) {
-               if (me.open === undefined) me.open = 0;
                say(me.name + " bursts open!", me, "see");
                add(me, "open");
                return;
             }
 
-            if (is(me.open)) {
+            if (is(me.open) || not(me.contents)) {
                say(me.name + " is torn to shreds!", me, "see");
                var contents = me.contents.slice();
                deleteObject(me);
                scatter(contents, 3);
             }
-         }
+         },
       }
    },
 
@@ -448,16 +447,19 @@ parameters = {
    }, 
 
    angering : {
-      values: {
-          1: "has rage-inducing properties",
-      },
-      revealed_by : [
-         "alchemy_knowledge"
-      ],
-      types: [
-         "chemical"
-      ],
-      default: 0
+      values: { 1: "has anxiety-inducing properties" },
+      revealed_by : [ "alchemy_knowledge"],
+      types: ["chemical"],
+      functions : {
+         "digest" : function(me, digester) {
+            if (digester.parent) {
+               var brain = getBrain(digester.parent);
+               if (not(brain.stressed)) {
+                  add(getBrain(digester.parent), "stressed");
+               }
+            }
+         }
+      }
    }, 
 
    hunger_inducing : {
@@ -470,7 +472,16 @@ parameters = {
       types: [
          "chemical"
       ],
-      default: 0
+      functions : {
+         "digest" : function(me, digester) {
+            if (digester.parent) {
+               var brain = getBrain(digester.parent);
+               if (not(brain.hungry)) {
+                  add(getBrain(digester.parent), "hungry");
+               }
+            }
+         }
+      }
    }, 
 
    anaesthetic : {
@@ -485,6 +496,12 @@ parameters = {
       ],
       default: 0
    }, 
+
+   watertight : {
+      values: { 0: "is not watertight", 1: "is watertight"},
+      type: [ "mechanical" ],
+      revealed_by : [ "look" ],
+   },
 
    isLiquid : {
       values : {
@@ -563,7 +580,7 @@ parameters = {
          "look"
       ],
       values: function(contents, object) {
-         if (is(object.open)) {
+         if (is(object.open) || is(object.openable)) {
             if (contents.length > 0) {
                var contents_string = "contains ";
                var os = object.contents.map(function(v){ return v.name; });
@@ -660,13 +677,16 @@ parameters = {
       functions : {
          "tick" : function(me) {
             if (Math.random() < .1) {
-               sub(me, "oxygenated");
+               if (is(me.oxygenated)) {
+                  sub(me, "oxygenated");
+               }
             }
          }
       }
    },
 
    isBlood : {
+      types: [ "chemical" ]
    },
 
    blood_pumping : {
@@ -681,13 +701,14 @@ parameters = {
             if (me.parent !== undefined && not(me.parent.isRoom)) {
                var contents = me.parent.contents;
                
-               if (is(me.parent.living) && 
+               if (is(me.living) && 
                   //Does this creature have blood?
                   contents.some(function(a){ return is(a.isBlood); })) {
                   //Then pump it!
                   contents.forEach(function(a) { call(a, "heartbeat"); add(a, "oxygenated") });
                   add(me.parent, "oxygenated");
                   call(me.parent, "heartbeat");
+                  say(me.name + " pulses.", me, "see");
                }
             }
          }
@@ -732,7 +753,7 @@ parameters = {
          "biology_knowledge"
       ],
       functions : {
-         "heartbeat" : function(me) {
+         "think" : function(me) {
             if (me.parent !== undefined && not(me.parent.isRoom)) {
                if (is(me.parent.hungry)) {
                   if (Math.random() < .1) {
@@ -783,7 +804,8 @@ parameters = {
             if (me.contents.length > 0) {
                for (var c in me.contents) {
                   if (is(me.contents[c].digestible)) {
-                     call(me.contents[c], "digest");
+                     call(me.contents[c], "churn");
+                     call(me.contents[c], "digest", me);
                   } else {
                      call(me, "gag", me.contents[c]);
                   }
@@ -791,6 +813,10 @@ parameters = {
             }
          },
          "eat" : function(me, eaten) {
+            if (me.parent && getBrain(me.parent)) {
+               sub(getBrain(me.parent), "hungry");
+            }
+
             if (is(me.contents)) {
                setContainer(eaten, me);
             }
@@ -841,8 +867,21 @@ parameters = {
          "addedObject" : function(me, what) {
             if (what.material === materials.flesh || is(what.isBlood)) {
                if (not(what.digestible)) {
-                  if (what.digestible === undefined) what.digestible = 0;
-                  what.digestible += 1;
+                  add(what, "digestible"); 
+               }
+            }
+         }
+      }
+   },
+
+   herbivoreGag : {
+      values: { 1: "can digest plant matter" },
+      revealed_by : [ "biology_knowledge" ],
+      functions : {
+         "addedObject" : function(me, what) {
+            if (what.material === materials.plant) {
+               if (not(what.digestible)) {
+                  add(what, "digestible"); 
                }
             }
          }
@@ -856,22 +895,6 @@ parameters = {
       revealed_by : [
          "psychology_knowledge", "look"
       ],
-   },
-
-   sentient : {
-      values: {
-         1: "is sentient"
-      },
-      revealed_by : [
-         "biology_knowledge"
-      ],
-      functions : {
-         "heartbeat" : function(me) {
-            if (is(me.living) && is(me.conscious)) {
-               call(me, "think");               
-            }
-         }
-      }
    },
 
    //Used to determine if an object is living in the 
@@ -947,34 +970,6 @@ parameters = {
       }
    },
 
-   nutritious : {
-      values: {
-         0: "is drained of nutrients",
-         1: "is nutritious"
-      },
-      revealed_by : [
-         "chemistry_knowledge", "biology_knowledge",
-      ],
-      types : [
-         "chemical"
-      ],
-      functions : {
-         "digest" : function(me) {
-            var creature;
-            if (parent !== undefined && parent.parent !== undefined) {
-               creature = parent.parent;
-            } else {
-               console.log("Couldn't find object that is digesting " + me.name, me);
-               return;
-            }
-
-            if (not(creature.sated)) {
-               creature.sated = 1;
-            }
-         }
-      }
-   },
-
    digestible : {
       values: {
          1: "is easily digestible"
@@ -984,6 +979,7 @@ parameters = {
       ],
       functions : {
          "digest" : function(me) {
+            say(me.name + " is melted down into insubstantial mush", me, "see");
             deleteObject(me);
          }
       }
@@ -1034,6 +1030,89 @@ parameters = {
             if (!haswater) {
                var water = createObjectFromTemplate("water");
                setContainer(water, me);
+            }
+         }
+      }
+   },
+   
+   bladed : {
+      values: { 1: "has a sharp edge" },
+      revealed_by : [ "look" ],
+      functions : {
+         "churn" : function(me, churner) {
+            if (not(me.parent.isRoom)) {
+               call(me, "slash", me.parent);
+            }
+         }
+      },
+      actionsHeld : {
+         "Slash" : function(me, caller, target) {
+            say("You slash at " + target.name + "with " + me.name + "!", me, "do");
+            call(target, "slash", me);
+         }
+      }
+   },
+
+   pointy : {
+      values: { 1: "is pointy" },
+      revealed_by : [ "look" ],
+      functions : {
+         "churn" : function(me, churner) {
+            if (not(me.parent.isRoom)) {
+               call(me.parent, "stab", me);
+            }
+         },
+         actionsHeld : {
+            "Stab" : function(me, caller, target) {
+               say("You stab " + target.name + "with " + me.name + "!");
+               call(target, "stab", me);
+            }
+         }
+      }
+   },
+
+   lacerated : {
+      values: { 1: "is covered in bleeding slash wounds. "},
+      types : [ "physical" ],
+      functions : {
+         "heartbeat" : function(me) {
+            if (is(me.lacerated)) {
+               if (not(me.contents)) return;
+               if (Math.random() < .25) {
+                  var blood = me.contents.filter(function(a){ return is(a.isBlood);});
+                  for (var v in blood) {
+                     removeFromContainer(blood[v]); 
+                  }
+
+                  say(me.name + " bleeds out!", me, "see");
+               }
+            }
+         }
+      }
+   },
+
+   feelsPain : {
+      values: { 1: "feels pain" },
+      types: [ "physical" ],
+      functions : {
+         "slash" : function(me, slasher) {
+            if (is(me.living)) {
+               call(me, "hurt", slasher);
+               if (me.contents) {
+                  for (var v in me.contents) {
+                     call(me.contents, "hurt", slasher);
+                  }
+               }
+            }
+         },
+         "stab" : function(me, stabber) {
+            if (is(me.living)) {
+               call(me, "hurt", stabber);
+               if (me.contents) {
+                  for (var v in me.contents) {
+                     call(me.contents, "hurt", stabber);
+                  }
+               }
             }
          }
       }
