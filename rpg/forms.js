@@ -11,11 +11,9 @@ forms = {
       animated: 1,
       mobile: 1,
    },
-
    "organ" : {
       isOrgan : 1,
    },
-
    "cat" : {
       symbol: "C",
       contents : [],
@@ -36,7 +34,6 @@ forms = {
       wanderBored: 1,
       catBrain: 1,
    },
-
    "mouse" : {
       symbol: "M",
       contents: ["blood"],
@@ -57,7 +54,6 @@ forms = {
 
       wanderBored: 1,
    },
-
    "book" : {
       symbol: "B",
       phlogiston: 1,
@@ -72,7 +68,6 @@ forms = {
          }
       }
    },
-
    "bush" : {
       symbol : "T",
       big: 1,
@@ -88,7 +83,6 @@ forms = {
          }
       }
    },
-
    "kettle" : {
       symbol: "K",
       openable: 1,
@@ -103,63 +97,57 @@ forms = {
          }
       }
    },
-
    "pit" : {
       symbol: "P",
       open: 1,
       big: 1,
       contents: []
    },
-
    "liquid" : {
       symbol: "~",
       isLiquid: 1
    },
-
    "salve" : {
       symbol: "~",
       thick: 1,
       soluble: 1,
    },
-
-
    "brain" : {
       symbol: "B",
       sentient: 1,
       conscious: 1,
    },
-
    "heart" : {
       symbol: "<3",
    },
-
    "stomach" : {
       symbol: "S",
    },
-
    "mouse_hole" : {
       spawnsMice : 1,
    },
-
    "well" : {
       symbol: "W"
    },
-
    "sponge" : {
       symbol: "S"
    },
-
    "door" : {
       symbol: ">"
    },
-
    "jar" : {
       symbol: "J",
       contents: [],
       openable: 1,
       open: 1,
    },
-
+   "bucket" : {
+      symbol: "U",
+      contents : [],
+      open: 1,
+      openable: 0,
+      watertight: 1,
+   },
    wall : {
       name: "wall",
       symbol: "#",

@@ -122,6 +122,8 @@ templates.stone_wall = {
    rooted: 1,
 }
 
+//KITCHEN
+
 maps.kitchen = {
    name : "The Kitchen",
    map: [
@@ -129,7 +131,7 @@ maps.kitchen = {
    "..........",
    "..####>#..",
    "..#BXX.###",
-   "..#......#",
+   "..#.....U#",
    "..#....###",
    "..#KPCL#..",
    "..######..",
@@ -145,7 +147,8 @@ maps.kitchen = {
       "P" : "fire_pit",
       "C" : "collander",
       "B" : "cupboard",
-      "L" : "lard_jar"
+      "L" : "lard_jar",
+      "U" : "bucket",
    }
 }
 
@@ -194,6 +197,13 @@ templates.lard = {
          }
       }
    }
+}
+
+templates.bucket = {
+   form: "bucket",
+   name: "a dirty washbucket",
+   material: "wood",
+   contents: [ "water", "sponge" ],
 }
 
 function door(target) {

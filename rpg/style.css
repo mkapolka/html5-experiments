@@ -64,6 +64,13 @@ h1 {
    -o-transition: all .25s;
 }
 
+.button .mnem {
+   position: absolute;
+   display: block;
+   right: 5px;
+   bottom: 5px;
+}
+
 .noselect {
    cursor: pointer;
    /*Make it unselectable */

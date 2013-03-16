@@ -55,7 +55,7 @@ function setupGrid(room) {
 
 function setHoverTextTile(room, tileX, tileY)
 {
-   var objects = getObjectsAt(room, tileX, tileY);
+   var objects = getVisibleObjectsAt(tileX, tileY, getPlayer());
 
    var text = $("<ul>You see here...</ul>");
    
@@ -63,11 +63,18 @@ function setHoverTextTile(room, tileX, tileY)
    {
       if (objects[i].name !== undefined)
       {
-         text.append($("<li>" + objects[i].name + "</li>"));
+         if (objects[i].parent.isRoom) {
+            text.append($("<li>" + objects[i].name + "</li>"));
+         } else {
+            text.append($("<li>" + objects[i].name + "(inside " + objects[i].parent.name + ")" + "</li>"));
+         }
       }
    }
 
    setHoverText(text);
+
+   //Act like selectTile
+   showActionButtons(room, tileX, tileY);
 }
 
 function selectTile(which, room)
@@ -92,21 +99,31 @@ function deselectTile(tile)
 function showActionButtons(room, x, y)
 {
    var actions = [];
+   var mnemonics = [];
    var objects_here = getObjectsAt(room, x, y);
 
    //Actions
    actions.push("Walk Here");
+   mnemonics.push("W");
+   actions.push("Wait");
+   mnemonics.push("Z");
+
+   //Numbered mnemonics
+   var mnem = 1;
 
    if (objects_here.length > 0)
    {
       actions.push("Get");
+      mnemonics.push("G");
       actions.push("Examine");
+      mnemonics.push("E");
 
       for (var o in objects_here) {
          var standingActions = getStandingActions(objects_here[o]);
          for (var a in standingActions) {
             if (actions.indexOf(a) === -1){
                actions.push(a);
+               mnemonics.push(mnem++);
             }
          }
       }
@@ -114,26 +131,22 @@ function showActionButtons(room, x, y)
 
    if (player.holding !== undefined)
    {
-      actions.push("Put");
+      actions.push("Drop");
+      mnemonics.push("D");
 
       //Held object actions
       var heldActions = getHeldActions(player.holding);
 
       for (var a in heldActions) {
          actions.push(a);
+         mnemonics.push(mnem++);
       }
-   }
-
-   //Player specific actions
-   if (objects_here.indexOf(player) !== -1)
-   {
-      actions.push("Wait");
    }
 
    var objects = [];
    for (var i in actions)
    {
-      objects.push({"type":actions[i], "x" : x, "y" : y});
+      objects.push({"type":actions[i], "x" : x, "y" : y, "mnemonic":mnemonics[i]});
    }
    
    var thingButtons = makeOptions(actions, objects, doAction);
@@ -185,7 +198,7 @@ function doAction(action)
          return;
       break;
 
-      case "Put":
+      case "Drop":
          showLocationButtons(getCurrentRoom(), action.x, action.y, function(object) {
             if (!isAdjacent(player.x, player.y, object.x, object.y)){
                moveAdjacentTo(player, object);
@@ -260,23 +273,17 @@ function showObjectButtons(room, x, y, callback)
    var names = [];
    var objects = [];
    var objects_here = getVisibleObjectsAt(x, y, getPlayer());
+   var mnem = 1;
 
    for (var o in objects_here)
    {
       var obj = objects_here[o];
-      names.push(obj.name);
+      obj.mnemonic = "" + mnem++;
       objects.push(obj);
-
-      if (obj.contents !== undefined)
-      {
-         for (var o2 in obj.contents)
-         {
-            var obj2 = obj.contents[o2];
-            if (isVisible(obj2)) {
-               names.push(obj2.name + "(inside " + obj.name + ")");
-               objects.push(obj2);
-            }
-         }
+      if (objects_here[o].parent !== getRoom(objects_here[o])) {
+         names.push(obj.name + "(inside " + objects_here[o].parent.name + ")");  
+      } else {
+         names.push(obj.name);
       }
    }
 
@@ -318,17 +325,19 @@ function showLocationButtons(room, x, y, callback)
    
    var names = [];
    var objects = [];
+   var mnem = 1;
 
    names.push("On the ground");
-   objects.push({"isFloor":true, "x":x,"y":y});
+   objects.push({"isFloor":true, "x":x,"y":y, "mnemonic":mnem++});
 
 
    for (var o in obAt)
    {
-      if (obAt[o].contents !== undefined && obAt[o].open > 0)
+      if (obAt[o].contents !== undefined && (is(obAt[o].open) || is(obAti[o].openable)))
       {
          names.push("Inside " + obAt[o].name);
          objects.push(obAt[o]);
+         obAt[o].mnemonic = mnem++;
       }
    }
 
@@ -436,14 +445,21 @@ function pushHTML(htmlString)
 
 function makeOptions(strings, options, callback)
 {
+   $("body").unbind('keydown');
    var container = $("");
+
    for (var o in options)
    {
-      var button = $("<div class='button noselect'>" + strings[o] + "</div>");
+      var button = $("<div class='button noselect'>" + strings[o] + "<div class='mnem'>" + options[o].mnemonic + "</div></div>");
       button[0].value = options[o];
       button.click(function() {
          callback(this.value);
       });
+      $("body").bind('keydown', "" + options[o].mnemonic, function(obj, callback) {
+         return function() {
+            callback(obj);
+         };
+      }(options[o], callback));
       container = container.add(button);
    }
 
