@@ -75,7 +75,7 @@ parameters = {
       types: [ "physical" ],
       functions : {
          "tick": function(me) {
-            if (is(me.hot) && not(me.boiling)) {
+            if (is(me.hot) && not(me.boiling) && rand(10, .1)) {
                if (isVisible(me)) {
                   say(me.name + " starts to boil", me, "see");
                }
@@ -97,6 +97,11 @@ parameters = {
          }
       },
       functions : {
+         "tick" : function(me) {
+            if(me.holding && me.holding.isDeleted) {
+               delete me.holding;
+            }
+         },
          "move" : function(me, x, y) {
             if (is(me.holding)) {
                moveObject(me.holding, x, y, true);
@@ -167,14 +172,22 @@ parameters = {
       default: 0,
       functions : {
          "tick" : function(me) {
-            if (is(me.boiling) && Math.random() < .1) {
-               if (isVisible(me)) {
-                  say(me.name + " boils away!", me, "show");
-               }
+            if (not(me.hot)) {
+               sub(me, "boiling");
+            }
+
+            if (is(me.boiling) && is(me.hot) && rand(20,.2)) {
+               say(me.name + " boils away!", me, "see");
                deleteObject(me);
             }
+         },
+         "add" : function(me) {
+            say(me.name + " begins to boil.", me, "see");
+         },
+         "sub": function(me) {
+            say(me.name + " stops boiling.", me, "see");
          }
-      }
+      },
    },
 
    flammable : {
@@ -198,7 +211,7 @@ parameters = {
       }
    },
 
-   hot: {
+   hot : {
       values: {
          1: "is hot",
       },
@@ -210,30 +223,30 @@ parameters = {
       ],
       functions : {
          "tick" : function(me) {
-            //TODO: Revisit heat mechanics
+            if (not(me.hot)) return;
+
             if (me.contents !== undefined)
             {
-               for (var o in me.contents) {
-                  call(me.contents[o], "heat");
-                  add(me.contents[o], "hot");
-               }
-            }
-
-            if (me.parent !== undefined && Math.random() > .1)
-            {
-               //Sometimes heat parent
-               if (Math.random() < .1) {
-                  call(me.parent, "heat");
-                  add(me.parent, "hot");
+               if (rand(5, .2)) {
+                  for (var o in me.contents) {
+                     if (not(me.contents[o].hot)) {
+                        add(me.contents[o], "hot");
+                     }
+                  }
                }
             }
 
             //Small chance to cool down every tick
-            if (Math.random() < .1) {
-               call(me, "cool");
+            if (rand(5, .2)) {
                sub(me, "hot");
             }
-         } 
+         },
+         "add" : function(me) {
+            say(me.name + " heats up.", me, "see");
+         },
+         "sub" : function(me) {
+            say(me.name + " cools down.", me, "see");
+         }
       }
    },
 
@@ -251,9 +264,14 @@ parameters = {
          "tick": function(me) {
             var touching = getObjectsTouching(me);
             for (var i in touching) {
-               if (!touching[i].hot) touching[i].hot = 1;
-               call(touching[i], "heat", me.burning);
+               if (!touching[i].hot) {
+                  add(touching[i], "hot");
+               }
                call(touching[i], "burn", me.burning);
+            }
+
+            if (not(me.hot)) {
+               add(me, "hot");
             }
 
             call(me, "burn", me.burning);
@@ -417,6 +435,9 @@ parameters = {
                   return;
                }
             }
+         },
+         "churn" : function(me, churner) {
+            
          }
       }
    }, // soluble
@@ -452,38 +473,70 @@ parameters = {
       revealed_by : [ "alchemy_knowledge"],
       types: ["chemical"],
       functions : {
+         "heartbeat" : function(me, body) {
+            if (not(body.stressed)) {
+               add(body, "stressed");
+            }
+         },
          "digest" : function(me, digester) {
-            if (digester.parent) {
-               var brain = getBrain(digester.parent);
-               if (not(brain.stressed)) {
-                  add(getBrain(digester.parent), "stressed");
-               }
+            if(is(me.angering));
+            if (Math.random() < .5) {
+               add(digester, "angering");
+               delete me.angering;
             }
          }
       }
    }, 
 
    hunger_inducing : {
-      values: {
-          1: "has hunger-inducing properties",
-      },
-      revealed_by : [
-         "alchemy_knowledge"
-      ],
-      types: [
-         "chemical"
-      ],
+      values: { 1: "has hunger-inducing properties" },
+      revealed_by : [ "alchemy_knowledge" ],
+      types: ["chemical"],
       functions : {
+         "heartbeat" : function(me, body) {
+            if (not(body.hungry)) {
+               add(body, "hungry");
+            }
+         },
          "digest" : function(me, digester) {
-            if (digester.parent) {
-               var brain = getBrain(digester.parent);
-               if (not(brain.hungry)) {
-                  add(getBrain(digester.parent), "hungry");
-               }
+            if(is(me.hunger_inducing));
+            if (Math.random() < .5) {
+               add(digester, "hunger_inducing");
+               delete me.hunger_inducing;
             }
          }
       }
    }, 
+
+   gagSuppressing : {
+      values: { 1: "prevents nausea" },
+      revealed_by : [ "alchemy_knowledge" ],
+      types: ["chemical"],
+      functions : {
+         "heartbeat" : function(me, body) {
+            if (!me.gagSuppressing) return;
+            if (body.gagReflex === undefined) return;
+
+            if (is(body.gagReflex)) {
+               say("Your stomach feels less picky.", body, "feel");
+               sub(body, "gagReflex");
+            } else {
+               if (Math.random() < .1) {
+                  say("Your stomach feels more sensitive", body, "feel");
+                  add(body, "gagReflex");
+                  delete me.gagSuppressing;
+               }
+            }
+         },
+         "digest" : function(me, digester) {
+            if(is(me.gagSuppressing));
+            if (Math.random() < .5) {
+               add(digester, "gagSuppressing");
+               delete me.gagSuppressing;
+            }
+         }
+      }
+   },
 
    anaesthetic : {
       values: {
@@ -541,6 +594,12 @@ parameters = {
                removeFromContainer(me);
                say(me.name + " spills out of the " + cont.name, me, "see");
             }
+         },
+         "add": function(me) {
+            sub(me, "holdable");
+         },
+         "sub": function(me) {
+            add(me, "holdable");
          }
       }
    },
@@ -653,16 +712,11 @@ parameters = {
       ],
       functions : {
          "tick" : function(me) {
-            if (not(me.oxygenated) && is(me.living)) {
-               if (Math.random() < .5) {
-                  sub(me, "living");
-               }
-            }
          },
 
          "sub" : function(me) {
-            if (isVisible(me)) {
-               say("The life drains out of " + me.name, me, "see");
+            if (not(me.living) && is(me.animated)) {
+               say(me.name + " dies!", me, "see");
             }
          }
       }
@@ -677,6 +731,11 @@ parameters = {
       ],
       functions : {
          "tick" : function(me) {
+            if (not(me.oxygenated) && is(me.living)) {
+               if (Math.random() < .1) {
+                  sub(me, "living");
+               }
+            }
             if (Math.random() < .1) {
                if (is(me.oxygenated)) {
                   sub(me, "oxygenated");
@@ -690,25 +749,34 @@ parameters = {
       types: [ "chemical" ]
    },
 
-   blood_pumping : {
+   bloodPumping : {
       values: {
          1: "has a heartbeat"
       },
       revealed_by : [
          "biology_knowledge"
       ],
+      types: [ "cardiovascular" ],
       functions : {
          "tick" : function(me) {
             var contents = me.contents;
             
             if (is(me.living) && 
-                is(me.blood_pumping) && 
+                is(me.bloodPumping) && 
+                me.contents && 
                //Does this creature have blood?
                me.contents.some(function(a){ return is(a.isBlood); })) {
                //Then pump it!
-               contents.forEach(function(a) { call(a, "heartbeat"); add(a, "oxygenated") });
-               add(me, "oxygenated");
-               call(me, "heartbeat");
+               contents.forEach(function(a) { 
+                  call(a, "heartbeat", me);
+                  if (a.oxygenated !== undefined) {
+                     add(a, "oxygenated");
+                  }
+               });
+               if (me.oxygenated !== undefined) {
+                  add(me, "oxygenated");
+               }
+               call(me, "heartbeat", me);
             }
          }
       }
@@ -786,38 +854,45 @@ parameters = {
       }
    },
 
+   digestMe : {
+      values: { 1: "is coated with a digestive enzyme" },
+      revealed_by : [ "biology_knowledge", "chemistry_knowledge" ],
+   },
 
    //Remember that this will typically be a property of stomachs
    //so if you want to do something to the creature use me.parent.parent
    //instead of just me.parent
    digesting : {
       values : {
-         1: "is for digesting food"
+         1: "can digest food"
       },
       revealed_by : [
          "biology_knowledge"
       ],
+      types: [ "gastrointestinal" ],
       functions : {
-         "heartbeat" : function(me) {
-            if (!is(me.contents)) return;
-            if (me.contents.length > 0) {
-               for (var c in me.contents) {
-                  if (is(me.contents[c].digestible)) {
-                     call(me.contents[c], "churn");
-                     call(me.contents[c], "digest", me);
-                  } else {
-                     if (not(me.contents[c].isBlood)) {
-                        call(me, "gag", me.contents[c]);
+         "heartbeat" : function(me, target) {
+            for (var v in me.contents) {
+               var target = me.contents[v];
+               if (target.digestMe) {
+                  if (is(target.digestible)) {
+                     call(target, "churn");
+                     call(target, "digest", me);
+                     if (target.contents) {
+                        target.contents.forEach(function(v) {
+                           v.digestMe = 1; 
+                        });
                      }
+                     sub(me, "hungry");
+                  } else {
+                     call(me, "gag", target);
                   }
                }
             }
          },
-         "eat" : function(me, eaten) {
-            sub(me, "hungry");
-
-            if (is(me.contents)) {
-               setContainer(eaten, me);
+         "eat" : function(me, who) {
+            if (not(who.isLiquid)) {
+               who.digestMe = 1;
             }
          }
       }
@@ -830,19 +905,22 @@ parameters = {
       revealed_by : [
          "biology_knowledge",
       ],
+      types: [ "gastrointestinal" ],
       functions : {
          "gag" : function(me, on) {
-            if (Math.random() < .8) {
-               var on = pickRandom(me.contents);
-               if (on === undefined) return;
-               say(me.name + " vomits up " + on.name, me, "see");
+            if (not(me.gagReflex)) return;
+
+            if (rand(2, .5)) {
                removeFromContainer(on);
+               say(me.name + " vomits up " + on.name, me, "see");
             } else {
-               say(me.name + " retches", me, "say");
+               say(me.name + " retches", me, "see");
             }
          },
-         "jostle" : function(me) {
-            call(me, 'gag');
+         "jostle" : function(me, jostler) {
+            if (me.stomach.indexOf(jostler) !== -1) {
+               call(me, "gag", jostler);
+            }
          }
       }
    },
@@ -855,7 +933,7 @@ parameters = {
          "biology_knowledge"
       ],
       functions : {
-         "addedObject" : function(me, what) {
+         "eat" : function(me, what) {
             if (what.material === materials.flesh) {
                if (not(what.digestible)) {
                   add(what, "digestible"); 
@@ -888,28 +966,13 @@ parameters = {
       ],
    },
 
-   lendsBloodPumping : {
-      functions : {
-         "enteredContainer" : function(me, container) {
-            if (!container) return;
-            if (not(container.isRoom)) {
-               add(container, "blood_pumping");
-            }
-         }, 
-         "leftContainer" : function(me, container) {
-            if (!container) return;
-            sub(container, "blood_pumping");
-         }
-      }
-   },
-
    //Used to determine if an object is living in the 
    //in the visual sense. Is this object walking around?
    animated : {
       //
    },
 
-   cookable : {
+   cooked : {
       values: {
          1: "can be cooked",
       },
@@ -917,14 +980,13 @@ parameters = {
          "alchemy_knowledge",
       ],
       functions : {
-         "heat" : function(me) {
+         "tick" : function(me) {
             if (is(me.hot) && Math.random() < .1) {
                if (not(me.cooked) && not(me.burnt)) {
                   if (isVisible(me)) {
                      say(me.name + " begins to smell tasty!", me, "see");
                   }
                   add(me, "edible");
-                  add(me, "nutritious");
                   add(me, "cooked");
                   call(me, "cook");
                } else {
@@ -932,22 +994,12 @@ parameters = {
                      say(me.name + " begins to smell burnt.", me, "say");
                   }
                   sub(me, "cooked");
-                  sub(me, "nutritious");
                   add(me, "burnt");
                   call(me, "cook");
                }
             }
          }
       }
-   },
-
-   cooked : {
-      values : {
-         1: "has been cooked"
-      },
-      revealed_by : [
-         "look"
-      ],
    },
 
    burnt : {
@@ -991,13 +1043,46 @@ parameters = {
       }
    },
 
+   rotting : {
+      values: {0: "will rot if left out too long", 1: "is rotting" },
+      revealed_by : [ "look" ],
+      functions : {
+         "tick" : function(me) {
+            if (not(me.rotting) && not(me.living)) {
+               if (Math.random() < .25) {
+                  add(me, "rotting");
+                  me.color = "lime";
+               }
+            }
+
+            if (is(me.rotting)) {
+               if (Math.random() < .25) {
+                  deleteObject(me);
+                  say(me.name + " decomposes into nothing", me, "see");
+               }
+            }
+         },
+         "add" : function(me) {
+            say(me.name + " decomposes into nothing", me, "see");
+         }
+      }
+   },
+
    spawnsMice : {
       functions : {
          "tick" : function(me) {
-            if (Math.random() < .1) {
+            if (!me.mice) me.mice = [];
+
+            var len = me.mice.length;
+            while (len--) {
+               if (me.mice[len].isDestroyed) me.mice.splice(len, 1);
+            }
+
+            if (Math.random() < .1 && me.mice.length < 3) {
                var room = getRoom(me);
                if (room !== undefined) {
                   var mouse = createObjectFromTemplate("mouse");
+                  me.mice.push(mouse);
                   moveObject(mouse, me.x, me.y);
                   setContainer(mouse, room);
                   say(mouse.name + " scurries out of " + me.name, me, "see");
@@ -1120,6 +1205,88 @@ parameters = {
                   }
                }
             }
+         }
+      }
+   },
+
+   //Warning: Takes all the properties of the given type with it when it leaves
+   lendsProperties : {
+      values:  function(value) { return "lends " + value + " properties to its host" },
+      reavealed_by : [ "biology_knowledge" ],
+      functions : {
+         "enteredContainer" : function(me, container) {
+            if (!container) return;
+            if (not(container.isRoom)) {
+               //that the container doesn't already have something that lends these properties
+               if (container.contents.some(function(a) {
+                  return a.lendsProperties === me.lendsProperties && a !== me;
+               })) {
+                  return;
+               }
+
+               var ptypes = getParamsByType(me, me.lendsProperties);
+               for (var v in ptypes) {
+                  container[ptypes[v]] = me[ptypes[v]];
+                  delete me[ptypes[v]];
+               }
+            }
+         }, 
+         "leftContainer" : function(me, container) {
+            if (!container) return;
+            if (is(container.isRoom)) return;
+            //that the container doesn't already have something that lends these properties
+            if (container.contents.some(function(a) {
+               a.lendsProperties === me.lendsProperties;
+            })) {
+               return;
+            }
+
+            var ptypes = getParamsByType(container, me.lendsProperties);
+            for (var v in ptypes) {
+               me[ptypes[v]] = container[ptypes[v]];
+               delete container[ptypes[v]];
+            }
+         }
+      }
+   },
+
+   brittle : {
+      values: { 1: "is very brittle" },
+      types : [ "physical" ],
+      functions : {
+         "bash" : function(me) {
+            if (is(me.brittle)) {
+               say(me.name + " shatters into pieces!", me, "see");
+               destroyObject(me);
+            }
+         },
+         "jostle" : function(me) {
+            if (not(me.brittle)) return;
+            if (not(me.parent.isRoom) && is(me.parent.hard)) {
+               say(me.name + " breaks", me, "see");
+               destroyObject(me);
+            }
+         }
+      }
+   },
+
+   thick : {
+      values: { 1: "is thick and viscous" },
+      types: [ "physical" ],
+      functions: {
+         "add" : function(me) {
+            add(me, "holdable");
+         },
+         "sub" : function(me) {
+            sub(me, "holdable");
+         }
+      },
+      actionsHeld : {
+         "Slather" : function(me, caller, target) {
+            say("You slather " + me.name + " onto " + target.name, me, "do");
+            call(me, "touch", target);
+            call(target, "touch", me);
+            mergeObject(target, me, ["chemical","physical"]);
          }
       }
    }

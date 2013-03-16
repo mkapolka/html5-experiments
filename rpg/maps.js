@@ -5,10 +5,10 @@ maps.garden = {
    name : "The Monastary Garden",
    map: [
    "..........",
-   ".M......C.",
-   ".H...L....",
-   ".......S..",
-   "..........",
+   ".M...L..C.",
+   ".H...LL.S.",
+   "..PP...S..",
+   "..P.......",
    ".....W....",
    "..........",
    "..@.......",
@@ -19,6 +19,7 @@ maps.garden = {
    key : {
       L : "lavender",
       S : "coriander",
+      P : "peppermint",
       W : "well",
       C : "cat",
       M : "mouse",
@@ -31,6 +32,30 @@ maps.garden = {
       ">" : door("library"),
       "<" : door("kitchen")
    }
+}
+
+templates.lavender = {
+   name: "a lavender bush",
+   form: "bush",
+   material: "plant",
+   calming: 1,
+   soluble: 1,
+}
+
+templates.coriander = {
+   name: "a coriander bush",
+   form: "bush",
+   material: "plant",
+   angering: 1,
+   soluble: 1
+}
+
+templates.peppermint = {
+   name: "a peppermint plant",
+   form: "bush",
+   material: "plant",
+   gagSuppressing : 1,
+   soluble: 1,
 }
 
 //LIBRARY
@@ -103,10 +128,10 @@ maps.kitchen = {
    "..........",
    "..........",
    "..####>#..",
-   "..#BXX.#..",
-   "..#....#..",
-   "..#....#..",
-   "..#KPC.#..",
+   "..#BXX.###",
+   "..#......#",
+   "..#....###",
+   "..#KPCL#..",
    "..######..",
    "..........",
    "..........",
@@ -119,7 +144,8 @@ maps.kitchen = {
       "K" : "kettle",
       "P" : "fire_pit",
       "C" : "collander",
-      "B" : "cupboard"
+      "B" : "cupboard",
+      "L" : "lard_jar"
    }
 }
 
@@ -147,6 +173,27 @@ templates.fork = {
    material: "metal",
    small: 1,
    pointy : 1,
+}
+
+templates.lard_jar = {
+   name: "a jar of delicious lard",
+   form: "jar",
+   material: "glass",
+   small: 1,
+   contents: ["lard"],
+}
+
+templates.lard = {
+   name: "some lard",
+   form: "salve",
+   edible: 1,
+   functions : {
+      "touch" : function(me, other) {
+         if (not(other.edible)) {
+            add(other, "edible");
+         }
+      }
+   }
 }
 
 function door(target) {

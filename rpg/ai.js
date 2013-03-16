@@ -1,3 +1,11 @@
+parameters.conscious = {
+   values: { 0: "is not conscious", 1: "is conscious" },
+   revealed_by : [ "look" ],
+   types: [ "psychological" ]
+}
+
+a = 0;
+b = 0;
 parameters.sentient = {
    values: {
       1: "is sentient"
@@ -7,7 +15,7 @@ parameters.sentient = {
    ],
    types: [ "psychological" ],
    functions : {
-      "heartbeat" : function(me) {
+      "tick" : function(me) {
          if (is(me.living) && is(me.conscious)) {
             call(me, "think");
          } else {
@@ -46,6 +54,7 @@ parameters.hungry = {
    revealed_by : [
       "psychology_knowledge", "look",
    ],
+   types: [ "psychological" ],
    functions : {
       "tick" : function(me) {
          if (not(me.hungry)) {
@@ -55,6 +64,11 @@ parameters.hungry = {
             }
          }
       },
+      "eat" : function(me) {
+         if (is(me.hungry)) {
+            sub(me, "hungry");
+         }
+      }
    }
 },
 
@@ -65,11 +79,12 @@ parameters.stressed = {
    revealed_by : [
       "psychology_knowledge"
    ],
+   types: [ "psychological" ],
    functions : {
       "think" : function(me) {
          if (is(me.stressed)) {
             if (Math.random() < .3) {
-               say(me.name + " calms down.", body, "see");
+               say(me.name + " calms down.", me, "see");
                sub(me, "stressed");
             }
          }
@@ -80,6 +95,7 @@ parameters.stressed = {
 parameters.escapeArtist = {
    values: { 1: "will escape if contained or grabbed" },
    revealed_by: [ "psychology_knowledge" ],
+   types: [ "psychological" ],
    functions : {
       "think" : function(me) {
          if (not(me.parent.isRoom)) {
@@ -101,8 +117,9 @@ parameters.stressedAttack = {
    revealed_by : [
       "psychology_knowledge"
    ],
+   types: [ "psychological" ],
    functions : {
-      thinkStressed : function(brain) {
+      thinkStressed : function(me) {
          var nearest = getNearest(me);
 
          call(me, "attack", nearest);
@@ -116,9 +133,8 @@ parameters.hunterThink = {
    values: {
       1: "thinks like a hunter"
    },
-   revealed_by : [
-      "psychology_knowledge"
-   ],
+   revealed_by : [ "psychology_knowledge" ],
+   types: [ "psychological" ],
    functions : {
       "thinkHungry" : function(me) {
          //What tasty treats can I find?
@@ -147,36 +163,14 @@ parameters.hunterThink = {
    }
 }
 
-parameters.carnivoreFilter = {
-   values: {
-      1: "likes to eat meat"
-   },
-   revealed_by : [
-      "psychology_knowledge"
-   ],
-   functions : {
-      "filterFood" : function(me, foodlist) {
-         var fl2 = foodlist.filter(function(a) {
-            if (a.material !== materials.flesh) {
-               return true;
-            } else {
-               return false;
-            }
-         });
-         for (var f in fl2) {
-            arrayRemove(foodlist, fl2[f]);
-         }
-      }
-   }
-}
-
 parameters.herbivoreNibble = {
    values : {
       1: "nibbles on plants"
    },
    revealed_by : [
-      "biology_knowledge"
+      "biology_knowledge", "psychology_knowledge"
    ],
+   types: [ "psychological" ],
    functions : {
       "thinkHungry" : function(me) {
          if (is(me.mobile)) {
@@ -189,6 +183,7 @@ parameters.herbivoreNibble = {
                   say(me.name + " nibbles on " + plant.name, me, "see");
                   var plantBit = duplicateObject(plant);
                   plantBit.name = "a bit of nibbled plant matter";
+                  plantBit.rotting = 0;
                   plantBit.big = 0;
                   plantBit.small = 1;
                   eat(me, plantBit);
@@ -210,6 +205,7 @@ parameters.wanderBored = {
    revealed_by : [
       "biology_knowledge", "psychology_knowledge",
    ],
+   types: [ "psychological" ],
    functions : {
       "thinkBored" : function(me) {
          if (is(me.mobile)) {
@@ -223,6 +219,8 @@ parameters.sleeping = {
    values : {
       1: "is asleep"
    },
+   revealed_by : [ "look" ],
+   types: [ "psychological" ],
    functions : {
       "heartbeat" : function(me) {
          if (is(me.sleeping) && Math.random() < .1) {
@@ -234,7 +232,7 @@ parameters.sleeping = {
          sub(me, "conscious");
       },
       "sub" : function(me) {
-         say(getBrainOwner(me).name + " wakes up.", me, "see");
+         say(me.name + " wakes up.", me, "see");
          add(me, "conscious");
       }
    }
@@ -244,6 +242,7 @@ parameters.catBrain = {
    values : {
       1: "thinks like a cat"
    },
+   types: [ "psychological" ],
    functions : {
       thinkBored : function(me){
          if (Math.random() < .25) {
@@ -256,48 +255,4 @@ parameters.catBrain = {
          }
       }
    }
-}
-
-parameters.sizeFilter = {
-   values : {
-      1: "only eats things smaller than itself"
-   },
-   revealed_by : [
-      "biology_knowledge", "psychology_knowledge",
-   ],
-   functions : {
-      "filterFood" : function(me, foodlist) {
-         var fl2 = foodlist.filter(function(a) {
-            //Big size: eat anything that isn't big
-            if (is(me.big) && not(a.big)) {
-               return false;
-            }
-
-            //Normal size: only eat small things
-            //if (not(me.big) && not(me.small) && is(a.small)) {
-            if (not(me.big) && not(me.small) && not(a.big)) {
-               return false;
-            }
-
-            //Small size: eat small things, cut this guy a break :(
-            if (is(me.small)) {
-               return false;
-            }
-
-            return true;
-         });
-
-         for (var f in fl2) {
-            arrayRemove(foodlist, fl2[f]);
-         }
-      }
-   }
-}
-
-//functions
-function getTasty(creature) {
-   var tasties = getRoom(creature).contents.slice();
-   tasties.splice(tasties.indexOf(creature), 1);
-   call(creature, "filterFood", tasties);
-   return pickRandom(tasties);
 }

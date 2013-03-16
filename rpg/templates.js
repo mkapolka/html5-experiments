@@ -5,54 +5,64 @@ templates.player = {
    form: "person",
    color: "black",
    material: "flesh",
-   contents: [],
+   contents: ["heart", "stomach", "brain", "blood"],
    holding: undefined,
 }
 
 templates.heart = {
    name: "a heart",
    form: "heart",
-   material: "flesh"
+   small: 1,
+   material: "flesh",
+   lendsProperties : "cardiovascular",
+   bloodPumping: 1,
+}
+
+templates.stomach = {
+   name: "a stomach",
+   form: "stomach",
+   material: "flesh",
+   small: 1,
+   lendsProperties: "gastrointestinal",
+   digesting: 1,
+   gagReflex: 1,
+   stomach: [],
+}
+
+templates.brain = {
+   name: "a brain",
+   form: "brain",
+   small: 1,
+   material: "flesh",
+   lendsProperties: "psychological",
+   sentient: 1,
+   conscious: 1,
 }
 
 templates.cat = {
    name: "Theophile the cat",
    form: "cat",
    material: "flesh",
+   contents: ["heart", "stomach", "brain", "blood"],
    living: 1,
    male: true,
+   carnivoreGag: 1,
 }
 
 templates.mouse = {
    name: "a field mouse",
    form: "mouse",
    material: "flesh",
+   contents: ["heart", "stomach", "brain", "blood"],
    soft: 1,
    living: 1,
+   herbivoreStomach: 1,
 }
 
 templates.blood = {
    name: "some blood",
    form: "liquid",
    material: "blood",
-   isBlood: 1,
-   oxygenated: 1,
-}
-
-templates.lavender = {
-   name: "a lavender bush",
-   form: "bush",
-   material: "plant",
-   calming: 1,
-   soluble: 1,
-}
-
-templates.coriander = {
-   name: "a coriander bush",
-   form: "bush",
-   material: "plant",
-   angering: 1,
-   soluble: 1
 }
 
 templates.saffron = {

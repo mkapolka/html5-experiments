@@ -1,3 +1,9 @@
+function creature(c) {
+   c.push("blood");
+   c.push("brain");
+   c.push("stomach");
+   c.push("heart");
+}
 forms = {
    "person" : {
       symbol: "@",
@@ -6,9 +12,13 @@ forms = {
       mobile: 1,
    },
 
+   "organ" : {
+      isOrgan : 1,
+   },
+
    "cat" : {
       symbol: "C",
-      contents : ["blood", "heart"],
+      contents : [],
       holding: undefined,
       clawed: 1,
       animated: 1,
@@ -17,19 +27,14 @@ forms = {
       living: 1,
 
       //bio
-      digesting: 1,
 
       //AI
-      sentient: 1,
-      conscious: 1,
       hungry: 1,
       escapeArtist: 1,
       stressedAttack: 1,
       hunterThink: 1,
-      carnivoreFilter: 1,
       wanderBored: 1,
       catBrain: 1,
-      sizeFilter: 1,
    },
 
    "mouse" : {
@@ -39,13 +44,17 @@ forms = {
       soft: 1,
       animated: 1,
       mobile: 1,
+      living: 1,
+      oxygenated: 1,
 
       //AI
       sentient: 1,
+      conscious: 1,
       hungry: 1,
       escapeArtist: 1,
       stressedAttack: 1,
       herbivoreNibble: 1,
+
       wanderBored: 1,
    },
 
@@ -86,6 +95,13 @@ forms = {
       open: 0,
       small: 1,
       hollow: 1,
+      functions : {
+         "tick" : function(me) {
+            if (me.contents.some(function(a) { return is(a.boiling); })) {
+               say(me.name + " whistles excitedly!", me, "say");
+            }
+         }
+      }
    },
 
    "pit" : {
@@ -100,6 +116,12 @@ forms = {
       isLiquid: 1
    },
 
+   "salve" : {
+      symbol: "~",
+      thick: 1,
+      soluble: 1,
+   },
+
 
    "brain" : {
       symbol: "B",
@@ -109,14 +131,10 @@ forms = {
 
    "heart" : {
       symbol: "<3",
-      lendsBloodPumping: 1,
    },
 
    "stomach" : {
       symbol: "S",
-      digesting: 1,
-      contents : [],
-      gagReflex: 1,
    },
 
    "mouse_hole" : {
@@ -135,6 +153,13 @@ forms = {
       symbol: ">"
    },
 
+   "jar" : {
+      symbol: "J",
+      contents: [],
+      openable: 1,
+      open: 1,
+   },
+
    wall : {
       name: "wall",
       symbol: "#",
@@ -146,6 +171,7 @@ materials = {
       name: "plant matter",
       flammable : 1,
       phlogiston: 1,
+      rotten : 0,
       color: "green"
    },
    "wood" : {
@@ -165,11 +191,12 @@ materials = {
    "flesh" : {
       name: "flesh",
       watertight: 1,
-      cookable : 1,
+      cooked : 0,
       soft: 1,
       oxygenated: 1,
       living: 1,
       feelsPain: 1,
+      rotting: 0,
       color: "#BB1111",
       functions : {
          "slash" : function(me) {
@@ -207,6 +234,7 @@ materials = {
       isLiquid: 1,
       isBlood: 1,
       boilable: -1,
+      oxygenated: 1,
       color: "red",
    },
    "sponge" : {
@@ -250,5 +278,10 @@ materials = {
 
          }
       }
+   },
+   "glass" : {
+      name: "glass",
+      color: "white",
+      brittle: 1
    }
 }

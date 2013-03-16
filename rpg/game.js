@@ -346,7 +346,8 @@ function pickup(object)
       return;
    }
 
-   if (is(object.isLiquid) || is(object.isGas) || is(object.rooted)) {
+   if (object.holdable !== undefined && not(object.holdable)) {
+   //if (is(object.isLiquid) || is(object.isGas) || is(object.rooted)) {
       pushGameText("You cannot pick that up!");
       return;
    }

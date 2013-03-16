@@ -57,6 +57,42 @@ function call(caller, method, dotdotdot)
 {
    if (typeof caller !== "object") console.log("bad caller in call(), arguments:", arguments);
 
+   //Allow us to pass down multiple arguments to whatever method we found
+   //without having to bundle them up in an array or w/e
+   function call_method(method, args) {
+      switch (args.length - 2)
+      {
+         case 0:
+            method(caller);
+         break;
+
+         case 1:
+            method(caller, args[2]);
+         break;
+
+         case 2:
+            method(caller, args[2], args[3]);
+         break;
+
+         case 3:
+            method(caller, args[2], args[3], args[4]);
+         break;
+
+         case 4:
+            method(caller, args[2], args[3], args[4], args[5]);
+         break;
+
+         default:
+            console.log("call() cannot take more than 4 parameters at the moment");
+         break;
+      }
+   }
+
+   //Object-specific functions
+   if (caller.functions && caller.functions[method]) {
+      call_method(caller.functions[method], arguments);
+   }
+
    for (var p in caller)
    {
       if (caller.isDestroyed) return;
@@ -65,32 +101,7 @@ function call(caller, method, dotdotdot)
          if (parameters[p].functions[method] !== undefined)
          {
             var m = parameters[p].functions[method];
-            switch (arguments.length - 2)
-            {
-               case 0:
-                  m(caller);
-               break;
-
-               case 1:
-                  m(caller, arguments[2]);
-               break;
-
-               case 2:
-                  m(caller, arguments[2], arguments[3]);
-               break;
-
-               case 3:
-                  m(caller, arguments[2], arguments[3], arguments[4]);
-               break;
-
-               case 4:
-                  m(caller, arguments[2], arguments[3], arguments[4], arguments[5]);
-               break;
-
-               default:
-                  console.log("call() cannot take more than 4 parameters at the moment");
-               break;
-            }
+            call_method(m, arguments);
          }
       }
    }
@@ -100,12 +111,18 @@ function call(caller, method, dotdotdot)
 //The container should be an object or room.
 function setContainer(object, container)
 {
+   if (!object) {
+      throw "Undefined object passed to setContainer";
+   }
+
    //Fix for when duplicating objects copies over the "parent" value
    if (object.parent !== undefined &&
          object.parent.contents.indexOf(object) === -1) {
       object.parent = undefined;
    }
+   //Nowhere to go
    if (object.parent === container) return;
+
    if (object.parent !== undefined)
    {
       if (object.parent.contents.indexOf(object) !== -1)
@@ -190,12 +207,15 @@ function duplicateObject(object)
          case "undefined":
          case "boolean":
          case "function":
-         case "object":
             output[v] = object[v];
          break;
 
-         case "array":
-            output[v] = object[v].slice();
+         case "object":
+            if (Array.isArray(object[v])) {
+               output[v] = object[v].slice();
+            } else {
+               output[v] = object[v];
+            }
          break;
       }
    }
@@ -210,9 +230,10 @@ function deleteObject(object, keepContents)
 {
    if (keepContents === undefined) keepContents = true;
    if (object.parent === undefined) return;
-   for (var v in object.contents) {
-      if (keepContents) {
-         removeFromContainer(object.contents[v]);
+   if (object.contents && keepContents) {
+      var toRemove = object.contents.slice();
+      for (var v in toRemove) {
+         removeFromContainer(toRemove[v]);
       }
    }
    object.isDestroyed = true;
@@ -432,7 +453,8 @@ function getParamTypes(param_name)
    return parameters[param_name].types;
 }
 
-//Returns an array of strings
+//Returns an array of the names of the properties
+//as strings
 function getParamsByType(object, type)
 {
    var output = [];
@@ -737,15 +759,14 @@ function getVisibleObjects(seer) {
 function isVisible(object, seer) {
    if (getRoom(object) !== getRoom(seer)) return false;
 
-   if (object.parent === seer.parent) {
-      return true;
+   var f = function(me) {
+      if (!me.parent) return true;
+      if (me.parent === seer.parent) return true;
+      if (not(me.parent.open)) return false;
+      return f(me.parent);
    }
 
-   if (object.parent.parent === seer.parent && is(object.parent.open)) {
-      return true;
-   }
-
-   return false;
+   return f(object);
 }
 
 function getRoom(object) {
@@ -758,12 +779,13 @@ function getRoom(object) {
 }
 
 function eat(who, target) {
+   if (!who || !target) return;
+   
+   if (who.contents) {
+      setContainer(target, who);
+   }
+
    call(who, "eat", target);
-
-   var eaten = false;
-
-   //Not sent to a stomach, goes right into the body
-   setContainer(target, who);
 }
 
 function getPronoun(object, type) {
@@ -951,13 +973,7 @@ function say(message, sender, wavelengths) {
       switch (a) {
          case "say":
             if (isVisible(sender, getPlayer())){
-               if (is(sender.parent.isRoom)) {
-                  push = true;
-               } else {
-                  if (isWithin(sender, getPlayer(), 3)) {
-                     push =  true;
-                  }
-               }
+               push = true;
             }
          break;
 
@@ -973,8 +989,8 @@ function say(message, sender, wavelengths) {
          break;
 
          case "feel":
-            if (not(getPlayerBrain().numb)) {
-               return true;
+            if (sender === getPlayer() && not(getPlayer().numb)) {
+               push = true;
             }
          break;
       }
@@ -1005,4 +1021,36 @@ function getObjectsAt(room, x, y, contents)
       }
    }
    return output;
+}
+
+//Contains objects so their index can be used as a UID
+randUIDs = [];
+//Contains random value information. keys should be UID + calling method
+rands = {};
+//Returns true roughly every "calls" times it is called,
+//with the actual randomness determined by randomness.
+//0 randomness means it will always return true after
+//"calls" calls and 1 means it has an even likelyhood
+//on every call. id is a value to keep track of who is
+//calling this method. this needs to be unqiue for every
+//check that is done
+function rand(calls, randomness) {
+   var me = rand.caller.arguments[0];
+   if (!me) throw "rand() not called in a proper context!";
+   var uid = randUIDs.indexOf(me);
+   if (uid === -1) uid = randUIDs.push(me) - 1;
+   var object = "" + uid + rand.caller;
+
+   if (!rands[object]) { rands[object] = 0; }
+   var r = rands[object];
+
+   var target = 1 - (Math.random() * randomness);
+   var roll = r + (Math.random() * randomness);
+   if (roll >= target) {
+      rands[object] = 0;
+      return true;
+   } else {
+      rands[object] += 1 / calls;
+      return false;
+   }
 }
