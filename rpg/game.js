@@ -53,8 +53,14 @@ function setupGrid(room) {
    });
 }
 
+var hoveredTileX = 0;
+var hoveredTileY = 0;
+
 function setHoverTextTile(room, tileX, tileY)
 {
+   hoveredTileX = tileX;
+   hoveredTileY = tileY;
+
    var objects = getVisibleObjectsAt(tileX, tileY, getPlayer());
 
    var text = $("<ul>You see here...</ul>");
@@ -102,44 +108,52 @@ function showActionButtons(room, x, y)
    var mnemonics = [];
    var objects_here = getObjectsAt(room, x, y);
 
-   //Actions
-   actions.push("Walk Here");
-   mnemonics.push("W");
+   var player = getPlayer();
+   
+
    actions.push("Wait");
    mnemonics.push("Z");
 
    //Numbered mnemonics
    var mnem = 1;
 
-   if (objects_here.length > 0)
-   {
-      actions.push("Get");
-      mnemonics.push("G");
-      actions.push("Examine");
-      mnemonics.push("E");
+   //Actions
+   if (is(player.animated) && is(player.conscious) && is(player.living)) {
+      if (is(player.mobile)) {
+         actions.push("Walk Here");
+         mnemonics.push("W");
+      }
 
-      for (var o in objects_here) {
-         var standingActions = getStandingActions(objects_here[o]);
-         for (var a in standingActions) {
-            if (actions.indexOf(a) === -1){
-               actions.push(a);
-               mnemonics.push(mnem++);
+      if (objects_here.length > 0)
+      {
+         actions.push("Get");
+         mnemonics.push("G");
+         actions.push("Examine");
+         mnemonics.push("E");
+
+         for (var o in objects_here) {
+            var standingActions = getStandingActions(objects_here[o]);
+            for (var a in standingActions) {
+               if (actions.indexOf(a) === -1){
+                  actions.push(a);
+                  mnemonics.push(mnem++);
+               }
             }
          }
       }
-   }
 
-   if (player.holding !== undefined)
-   {
-      actions.push("Drop");
-      mnemonics.push("D");
+      if (player.holding !== undefined)
+      {
+         actions.push("Drop");
+         mnemonics.push("D");
 
-      //Held object actions
-      var heldActions = getHeldActions(player.holding);
+         //Held object actions
+         var heldActions = getHeldActions(player.holding);
 
-      for (var a in heldActions) {
-         actions.push(a);
-         mnemonics.push(mnem++);
+         for (var a in heldActions) {
+            actions.push(a);
+            mnemonics.push(mnem++);
+         }
       }
    }
 
@@ -162,7 +176,7 @@ function doAction(action)
       case "Walk Here":
          moveObject(player, action.x, action.y, true);
          pushGameText("You walk over there.");
-         deselectTile(selected_tile);
+         //deselectTile(selected_tile);
       break;
 
       case "Examine":
@@ -172,7 +186,7 @@ function doAction(action)
             } 
             pushGameText("You examine " + object.name);
             pushGameText(revealToHTML(reveal(object, ["look", "feel"])));
-            deselectTile(selected_tile);
+            //deselectTile(selected_tile);
 
             doTick();
             updateTileText();
@@ -191,7 +205,7 @@ function doAction(action)
             } 
             pickup(object);
             updateTileText();
-            deselectTile(selected_tile);
+            //deselectTile(selected_tile);
             doTick();
             updateTileText();
          });
@@ -210,7 +224,7 @@ function doAction(action)
             }
             doTick();
             updateTileText();
-            deselectTile(selected_tile);
+            //deselectTile(selected_tile);
          });
          return;
       break;
@@ -225,7 +239,7 @@ function doAction(action)
                   heldActions[action.type](player.holding, player, object);
                   doTick();
                   updateTileText();
-                  deselectTile(selected_tile);
+                  //deselectTile(selected_tile);
                });
                return;
             }
@@ -250,14 +264,14 @@ function doAction(action)
                object.actionsStanding[action.type](object, player); 
                doTick();
                updateTileText();
-               deselectTile();
+               //deselectTile();
             });
          } else {
             if (objects.length == 0) return;
             var standingActions = getStandingActions(objects[0]);
             standingActions[action.type](objects[0], player);
+            doTick();
             updateTileText();
-            deselectTile(selected_tile);
          }
 
          return;
@@ -333,7 +347,7 @@ function showLocationButtons(room, x, y, callback)
 
    for (var o in obAt)
    {
-      if (obAt[o].contents !== undefined && (is(obAt[o].open) || is(obAti[o].openable)))
+      if (obAt[o].contents !== undefined && (is(obAt[o].open) || is(obAt[o].openable)))
       {
          names.push("Inside " + obAt[o].name);
          objects.push(obAt[o]);
@@ -435,7 +449,7 @@ function updateTileText(room)
 
 function pushGameText(string)
 {
-   $(".gametext").prepend("<li>" + string + "</li>");
+   $(".gametext:first").append("<li>" + string + "</li>");
 }
 
 function pushHTML(htmlString)

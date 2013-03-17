@@ -1,11 +1,34 @@
 parameters.conscious = {
    values: { 0: "is not conscious", 1: "is conscious" },
    revealed_by : [ "look" ],
-   types: [ "psychological" ]
+   types: [ "psychological" ],
+   functions : {
+      "bash" : function(me, attacker) {
+         if (not(me.knockedOut)) {
+            say(me.name + " is knocked unconscious!", me, "see");   
+            add(me, "knockedOut");
+         }
+      },
+   }
 }
 
-a = 0;
-b = 0;
+parameters.knockedOut = {
+   functions : {
+      "tick" : function(me) {
+         if (is(me.knockedOut) && rand(20, .5)) {
+            say(me.name + " comes to.", me, "see");
+            sub(me, "knockedOut");
+         }
+      },
+      "add" : function(me) {
+         sub(me, "conscious");
+      },
+      "sub" : function(me) {
+         add(me, "conscious");
+      }
+   }
+}
+
 parameters.sentient = {
    values: {
       1: "is sentient"
@@ -16,19 +39,19 @@ parameters.sentient = {
    types: [ "psychological" ],
    functions : {
       "tick" : function(me) {
-         if (is(me.living) && is(me.conscious)) {
+         if (is(me.conscious) && is(me.animated)) {
             call(me, "think");
          } else {
             return;
          }
 
-         if (is(me.hungry)) {
-            call(me, "thinkHungry");
+         if (is(me.stressed)) {
+            call(me, "thinkStressed");
             return;
          }
 
-         if (is(me.stressed)) {
-            call(me, "thinkStressed");
+         if (is(me.hungry)) {
+            call(me, "thinkHungry");
             return;
          }
 
@@ -54,7 +77,7 @@ parameters.hungry = {
    revealed_by : [
       "psychology_knowledge", "look",
    ],
-   types: [ "psychological" ],
+   types: [ "psychological", "gastrointestinal" ],
    functions : {
       "tick" : function(me) {
          if (not(me.hungry)) {
@@ -84,10 +107,15 @@ parameters.stressed = {
       "think" : function(me) {
          if (is(me.stressed)) {
             if (Math.random() < .3) {
-               say(me.name + " calms down.", me, "see");
                sub(me, "stressed");
             }
          }
+      },
+      "sub" : function(me) {
+         say(me.name + " calms down.", me, "see");
+      },
+      "add" : function(me) {
+         say(me.name + " freaks out!", me, "see");
       }
    }
 }
@@ -99,11 +127,11 @@ parameters.escapeArtist = {
    functions : {
       "think" : function(me) {
          if (not(me.parent.isRoom)) {
-            call(me, "attack", me.parent);
+            call(me, "attack", me, me.parent);
             add(me, "stress");
             if (is(me.parent.open)) {
-               removeFromContainer(me);
                say(me.name + " leaps out of " + me.parent.name, me, "see");
+               removeFromContainer(me);
             }
          }
       }
@@ -122,7 +150,7 @@ parameters.stressedAttack = {
       thinkStressed : function(me) {
          var nearest = getNearest(me);
 
-         call(me, "attack", nearest);
+         call(me, "attack", me, nearest);
 
          moveRandom(me, 3);
       }
@@ -139,18 +167,20 @@ parameters.hunterThink = {
       "thinkHungry" : function(me) {
          //What tasty treats can I find?
          var target = pickRandom(getVisibleObjects(me).filter(function(a) {
-            return (a.material === materials.flesh || a.material === materials.blood) && sizeCompare(me, a) > 0;
+            return (a.material === materials.flesh || a.material === materials.blood) && sizeCompare(me, a) >= 0 && me !== a;
          }));
 
          if (target !== undefined) {
             if (is(target.animated)) {
                if (Math.random() < .25) {
+                  call(me, "attack", me, target);
+               }
+
+               if (Math.random() < .25) {
                   say(me.name + " gobbles up the poor " + target.name, me, "see");
                   eat(me, target);
                   return;
                }
-
-               call(me, "attack", target);
                return;
             } else {
                say(me.name + " eats the " + target.name, me, "see");
@@ -173,7 +203,7 @@ parameters.herbivoreNibble = {
    types: [ "psychological" ],
    functions : {
       "thinkHungry" : function(me) {
-         if (is(me.mobile)) {
+         if (is(me.animated)) {
             var plant = pickRandom(getVisibleObjects(me).filter(function(a) {
                return a.material === materials.plant;
             }));
@@ -194,6 +224,21 @@ parameters.herbivoreNibble = {
                say(me.name + " sniffs around hungrily", me, "see");
             }
          }
+      }
+   }
+}
+
+parameters.tummyRub = {
+   values: { 1: "loves tummy rubs" },
+   revealed_by : [ "psychology_knowledge" ],
+   types: [ "psychological" ],
+   actionsStanding : {
+      "Rub Tummy" : function(me, caller, target) {
+         say("You rub " + me.name + "'s tummy.", caller, "do");
+         say(me.name + " purrs delightedly", me, "say");
+         sub(me, "stressed");
+         sub(me, "hungry");
+         add(me, "happy");
       }
    }
 }
@@ -223,7 +268,7 @@ parameters.sleeping = {
    types: [ "psychological" ],
    functions : {
       "heartbeat" : function(me) {
-         if (is(me.sleeping) && Math.random() < .1) {
+         if (is(me.sleeping) && rand(15, .1)) {
             sub(me, "sleeping");
          }
       },

@@ -18,8 +18,16 @@ function is(value) {
             return value > 0;
          break;
 
+         case "string":
+            return true;
+         break;
+
          case "object":
             return true;
+         break;
+
+         case "undefined":
+            return false;
          break;
       }
    }
@@ -51,6 +59,21 @@ function sub(object, paramName) {
       && parameters[paramName].functions.sub !== undefined) {
       parameters[paramName].functions.sub(object);
    }
+}
+
+function del(object, paramName) {
+   if (object[paramName] === undefined) {
+      return;
+   }
+
+   if (parameters[paramName]!==undefined 
+      && parameters[paramName].functions !== undefined
+      && parameters[paramName].functions.sub !== undefined) {
+      parameters[paramName].functions.sub(object);
+   }
+
+   delete object[paramName];
+
 }
 
 function call(caller, method, dotdotdot)
@@ -504,12 +527,21 @@ function doTick(room)
       for (var v in rooms) {
          doTick(rooms[v]);
       }
+
+      var gt = $(".gametext");
+      gt.removeClass("gametext");
+      $("#textcontainer").prepend("<hr>");
+      $("#textcontainer").prepend("<ul class='gametext'></ul>");
+      
+      setHoverTextTile(getRoom(getPlayer()), hoveredTileX, hoveredTileY);
       return;
    }
 
+   cull = [];
    for (var i in room.contents) {
       function callTick(obj)
       {
+         if (obj.isDestroyed){ cull.push(obj); return; };
          call(obj,"tick");
          if (obj.contents !== undefined)
          {
@@ -522,15 +554,24 @@ function doTick(room)
 
       callTick(room.contents[i]);
    }
+
+   for (var i in cull) {
+      room.contents.splice(room.contents.indexOf(cull[i]), 1);
+   }
+
 }
 
 function getGlyph(object)
 {
    if (object === undefined) return ".";
+   if (object.symbol !== undefined) {
+      return object.symbol;
+   }
+
    if (object.form !== undefined)
    {
       return object.form.symbol;
-   }
+   } 
 
    return object.name.charAt(0).toUpperCase();
 }
@@ -584,6 +625,10 @@ function createObjectFromTemplate(name)
       {
          setContainer(objects[i], output);
       }
+   }
+
+   if (output.holding !== undefined) {
+      output.holding = createObjectFromTemplate(output.holding);
    }
 
    return output;
@@ -1044,13 +1089,21 @@ function rand(calls, randomness) {
    if (!rands[object]) { rands[object] = 0; }
    var r = rands[object];
 
-   var target = 1 - (Math.random() * randomness);
-   var roll = r + (Math.random() * randomness);
+   var target = 1 - (1 / calls);
+   var roll = (r * (1 - randomness)) + (Math.random() * randomness);
    if (roll >= target) {
       rands[object] = 0;
       return true;
    } else {
       rands[object] += 1 / calls;
       return false;
+   }
+}
+
+function lendProperties(lendee, lender, type) {
+   var ptypes = getParamsByType(lender, type);
+   for (var v in ptypes) {
+      lendee[ptypes[v]] = lender[ptypes[v]];
+      delete lender[ptypes[v]];
    }
 }

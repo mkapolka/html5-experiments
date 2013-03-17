@@ -33,25 +33,33 @@ forms = {
       hunterThink: 1,
       wanderBored: 1,
       catBrain: 1,
+      tummyRub : 1,
    },
    "mouse" : {
       symbol: "M",
-      contents: ["blood"],
       small: 1,
       soft: 1,
       animated: 1,
       mobile: 1,
-      living: 1,
-      oxygenated: 1,
 
       //AI
-      sentient: 1,
-      conscious: 1,
       hungry: 1,
       escapeArtist: 1,
       stressedAttack: 1,
       herbivoreNibble: 1,
+      herbivoreGag: 1,
 
+      wanderBored: 1,
+   },
+   "troll" : {
+      symbol: "T",
+      big: 1,
+      mobile: 1,
+      animated: 1,
+
+      //AI
+      hunterThink : 1,
+      stressedAttack : 1,
       wanderBored: 1,
    },
    "book" : {
@@ -65,6 +73,29 @@ forms = {
             moveAdjacentTo(caller, target);
             pushGameText("You rifle through the pages, searching for information about " + target.name + 
             revealToHTML(reveal(target, me.revealType)));
+         }
+      }
+   },
+   "needle" : {
+      symbol: "/",
+      small: 1,
+      actionsHeld : {
+         "Sew" : function(me, caller, target) {
+            if (is(target.soft) && is(target.open)) {
+               moveAdjacentTo(caller, target);
+               say("You sew " + target.name + " closed", caller, "do");
+               sub(target, "open");
+            } else {
+               if (not(target.soft)) {
+                  say("Your needle can't penetrate that!", caller, "do");
+                  return;
+               }
+
+               if (not(target.open)) {
+                  say("You can't sew that shut because it's not open!", caller, "do");
+                  return;
+               }
+            }
          }
       }
    },
@@ -105,17 +136,17 @@ forms = {
    },
    "liquid" : {
       symbol: "~",
-      isLiquid: 1
+      isLiquid: 1,
+      holdable: 0,
    },
    "salve" : {
       symbol: "~",
       thick: 1,
-      soluble: 1,
+      isLiquid: 1,
    },
    "brain" : {
       symbol: "B",
-      sentient: 1,
-      conscious: 1,
+      small: 1,
    },
    "heart" : {
       symbol: "<3",
@@ -145,7 +176,6 @@ forms = {
       symbol: "U",
       contents : [],
       open: 1,
-      openable: 0,
       watertight: 1,
    },
    wall : {
@@ -270,6 +300,7 @@ materials = {
    "glass" : {
       name: "glass",
       color: "white",
-      brittle: 1
+      brittle: 1,
+      watertight: 1,
    }
 }

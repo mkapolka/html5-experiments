@@ -4,16 +4,16 @@ maps = {};
 maps.garden = {
    name : "The Monastary Garden",
    map: [
-   "..........",
+   "...O......",
    ".M...L..C.",
-   ".H...LL.S.",
+   ".....LL.S.",
    "..PP...S..",
    "..P.......",
    ".....W....",
    "..........",
    "..@.......",
    ".#<###>##.",
-   ".########.",
+   "H########.",
    ],
 
    key : {
@@ -30,7 +30,8 @@ maps.garden = {
          return player;
       },
       ">" : door("library"),
-      "<" : door("kitchen")
+      "<" : door("kitchen"),
+      "O" : door("cave")
    }
 }
 
@@ -63,8 +64,8 @@ templates.peppermint = {
 maps.library = {
    name : "The Dusty Library",
    map: [
-   "##########",
-   "#........#",
+   "###WWWW###",
+   "#....NH..#",
    "#C......P#",
    "#........#",
    "#........#",
@@ -81,7 +82,10 @@ maps.library = {
       "P" : "psych_book",
       ">" : door("garden"),
       "#" : "stone_wall",
-      "X" : "box"
+      "X" : "box",
+      "W" : "window",
+      "H" : "chair",
+      "N" : "needle",
    }
 }
 
@@ -106,6 +110,24 @@ templates.bio_book = {
    revealType: "biology_knowledge"
 }
 
+templates.window = {
+   name: "a stained glass window",
+   material: "glass",
+   big: 1,
+   rooted: 1,
+}
+
+templates.chair = {
+   name: "a chair",
+   material: "wood"
+}
+
+templates.needle = {
+   name: "a needle and thread",
+   material: "metal",
+   form: "needle",
+}
+
 templates.box = {
    name: "a box",
    material: "wood",
@@ -125,7 +147,7 @@ templates.stone_wall = {
 //KITCHEN
 
 maps.kitchen = {
-   name : "The Kitchen",
+   name : "Brother Buddy's Kitchen",
    map: [
    "..........",
    "..........",
@@ -156,7 +178,7 @@ templates.cupboard = {
    name : "a kitchen cupboard",
    material: "wood",
    contents : [
-      "knife", "fork"
+      "knife", "fork", "mallet"
    ],
    openable: 1,
    open: 0,
@@ -167,13 +189,28 @@ templates.cupboard = {
 templates.knife = {
    name: "a knife",
    material: "metal",
+   symbol: "/",
    small: 1,
    bladed: 1,
+}
+
+templates.mallet = {
+   name: "a mallet",
+   material: "metal",
+   symbol: "t",
+   small: 1,
+   actionsHeld : {
+      "Bash" : function(me, caller, target) {
+         say("You bash " + target.name + "!", caller, "do");
+         call(target, "bash");
+      }
+   }
 }
 
 templates.fork = {
    name: "a fork",
    material: "metal",
+   symbol: "Y",
    small: 1,
    pointy : 1,
 }
@@ -204,6 +241,97 @@ templates.bucket = {
    name: "a dirty washbucket",
    material: "wood",
    contents: [ "water", "sponge" ],
+}
+
+maps.cave = {
+   name: "A Dank Cave",
+   map: [
+   "##########",
+   "####>#####",
+   "##.....###",
+   "#H..T....#",
+   "#........#",
+   "#........#",
+   "#........#",
+   "##.....###",
+   "###.######",
+   "###.<#####",
+   ],
+   key : {
+      "<" : door("garden"),
+      ">" : door("lab"),
+      "#" : "stone_wall",
+      "T" : "troll",
+      "H" : "mouse_hole"
+   }
+}
+
+maps.lab = {
+   name: "A Defiled Laboratory",
+   map: [
+   "##########",
+   "#........#",
+   "#....H...#",
+   "#J......J#",
+   "#J...D..J#",
+   "#J......J#",
+   "#........#",
+   "#........#",
+   "#........#",
+   "#####>####",
+   ],
+   key : {
+      ">" : door("cave"),
+      "#" : "stone_wall",
+      "J" : "formaldehyde_jar",
+      "D" : "homunculus_dish",
+      "H" : "hom_jar",
+   }
+},
+
+templates.formaldehyde_jar = {
+   name : "a jar of formaldehyde",
+   form: "jar",
+   contents: [ "formaldehyde" ],
+   material: "glass", 
+}
+
+templates.formaldehyde = {
+   name: "some formaldehyde",
+   form: "liquid",
+   flammable : 1,
+   boilable : 1,
+   functions : {
+      "touch" : function(me, other) {
+         if (other.rotting !== undefined) {
+            say(other.name + " is preserved by " + me.name, other, "see");
+            del(other, "rotting");
+         }
+      }
+   }
+}
+
+templates.homunculus_dish = {
+   name: "a white porcelain dish",
+   form: "bucket",
+   material: "glass",
+   contents : [ "heart", "stomach", "blood" ],
+}
+
+templates.hom_jar = {
+   name: "a curio jar",
+   form: "jar",
+   material: "glass",
+   contents : [ "homunculus", "formaldehyde"],
+}
+
+templates.homunculus = {
+   name: "a shriveled body",
+   material: "flesh",
+   animated: 1,
+   contents: [],
+   openable: 1,
+   open: 0,
 }
 
 function door(target) {

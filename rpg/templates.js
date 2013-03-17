@@ -16,6 +16,11 @@ templates.heart = {
    material: "flesh",
    lendsProperties : "cardiovascular",
    bloodPumping: 1,
+   functions: {
+      "heartbeat" : function(me) {
+         say(me.name + " beats.", me, "see");
+      }
+   }
 }
 
 templates.stomach = {
@@ -26,13 +31,14 @@ templates.stomach = {
    lendsProperties: "gastrointestinal",
    digesting: 1,
    gagReflex: 1,
+   homeostatic: 1,
+   hungry: 0,
    stomach: [],
 }
 
 templates.brain = {
    name: "a brain",
    form: "brain",
-   small: 1,
    material: "flesh",
    lendsProperties: "psychological",
    sentient: 1,
@@ -55,14 +61,35 @@ templates.mouse = {
    material: "flesh",
    contents: ["heart", "stomach", "brain", "blood"],
    soft: 1,
-   living: 1,
    herbivoreStomach: 1,
+}
+
+templates.troll = {
+   name: "a hideous troll",
+   form: "troll",
+   material: "flesh",
+   contents : [ "heart", "stomach", "brain", "trollBlood"],
+   holding: "club",
+   carnivoreGag: 1,
+}
+
+templates.club = {
+   name: "an enormous wooden club",
+   material: "wood",
+   bludgeoning: 1,
 }
 
 templates.blood = {
    name: "some blood",
    form: "liquid",
    material: "blood",
+}
+
+templates.trollBlood = {
+   name: "some troll blood",
+   form: "liquid",
+   material: "blood",
+   trollBlood: 1,
 }
 
 templates.saffron = {
