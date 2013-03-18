@@ -362,7 +362,7 @@ function sizeCompare(objectA, objectB) {
    if (is(objectA.big) && not(objectB.big)) {
       return 1; 
    } else 
-   if (is(objectB.big) && not(objectB.big)) {
+   if (is(objectB.big) && not(objectA.big)) {
       return -1;
    } else 
    if (is(objectA.small) && not(objectB.small)) {
@@ -677,8 +677,15 @@ function getStandingActions(object) {
    }
    for (var i in object) {
       if (parameters[i] !== undefined && parameters[i].actionsStanding !== undefined){
-         for (var a in parameters[i].actionsStanding) {
-            output[a] = parameters[i].actionsStanding[a];
+         var actions;
+         if (typeof parameters[i].actionsStanding === "function") {
+            actions = parameters[i].actionsStanding(object);
+         } else {
+            actions = parameters[i].actionsStanding;
+         }
+
+         for (var a in actions) {
+            output[a] = actions[a];
          }
       }
    }

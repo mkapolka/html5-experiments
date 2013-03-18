@@ -98,6 +98,9 @@ parameters = {
       },
       functions : {
          "tick" : function(me) {
+            if (is(me.holding) && me.holding.parent !== me.parent) {
+               setContainer(me.holding, me.parent);
+            }
             if(me.holding && me.holding.isDeleted) {
                delete me.holding;
             }
@@ -387,6 +390,12 @@ parameters = {
                   call(me.contents[v], "bash", attacker);
                }
             }
+         },
+         "pierce" : function(me, attacker) {
+            if (is(me.watertight)) {
+               say(me.name + " is poked full of holes!", me, "see");
+               sub(me, "watertight");
+            }
          }
       }
    },
@@ -507,6 +516,26 @@ parameters = {
       }
    }, 
 
+   stimulating : {
+      values: { 1: "has stimulating properties" },
+      revealed_by : [ "alchemy_knowledge"] ,
+      types: [ "chemical" ],
+      functions : {
+         "heartbeat" : function(me, body) {
+            if (not(body.conscious)) {
+               add(body, "conscious");
+               say(body.name + " perks up!", body, "see");
+            }
+         },
+         "add" : function(me) {
+            say("You feel peppy!", me, "feel");
+         },
+         "sub" : function(me) {
+            say("The world seems to move faster.", me, "feel");
+         }
+      }
+   },
+
    hunger_inducing : {
       values: { 1: "has hunger-inducing properties" },
       revealed_by : [ "alchemy_knowledge" ],
@@ -587,7 +616,8 @@ parameters = {
             var touching = getObjectsTouching(me);
             for (var t in touching) {
                if (is(touching[t].isLiquid)) {
-                  mergeBySize(me, touching[t], ["chemical", "physical"]);
+                  say(me.name + " mixes with " + touching[t].name, me, "see");
+                  mergeObject(me, touching[t], ["chemical", "physical"]);
                   return;
                } else {
                   if (is(touching[t].open) && is(touching[t].contents)) {
@@ -701,8 +731,30 @@ parameters = {
               } else {
                  say("Cannot pour " + me.name + " into that!", me, "do");
               }
-           }
-        }
+           },
+           
+        },
+      actionsStanding : function(me) {
+         if (not(me.open) && not(me.openable)) {
+            return {};
+         }
+
+         if (me.contents.some(function(a) {
+            return is(a.isLiquid);
+         })) {
+
+            return {
+               "Drink" : function(me, caller, target) {
+                  var cont = me.contents.slice();
+                  
+                  say("You slurp down the contents of " + me.name, caller, "do");
+                  for (var v in cont) {
+                     eat(caller, cont[v]);
+                  }
+               }
+            }
+         }
+      }
    },
 
    material : {
@@ -952,6 +1004,12 @@ parameters = {
                if (not(what.digestible)) {
                   add(what, "digestible"); 
                }
+
+               for (var c in what.contents)  {
+                  if (not(what.contents[c].digestible) && what.contents[c].material == materials.flesh) {
+                     add(what.contents[c], "digestible");
+                  }
+               }
             }
          }
       }
@@ -1143,7 +1201,7 @@ parameters = {
                if (me.mice[len].isDestroyed) me.mice.splice(len, 1);
             }
 
-            if (Math.random() < .1 && me.mice.length < 3) {
+            if (Math.random() < .1 && me.mice.length < 1) {
                var room = getRoom(me);
                if (room !== undefined) {
                   var mouse = createObjectFromTemplate("mouse");
@@ -1219,12 +1277,12 @@ parameters = {
                call(me.parent, "stab", me);
             }
          },
-         actionsHeld : {
-            "Stab" : function(me, caller, target) {
-               moveAdjacentTo(caller, target);
-               say("You stab " + target.name + "with " + me.name + "!");
-               call(target, "stab", me);
-            }
+      },
+      actionsHeld : {
+         "Stab" : function(me, caller, target) {
+            moveAdjacentTo(caller, target);
+            say("You stab " + target.name + "with " + me.name + "!", caller, "do");
+            call(target, "stab", me);
          }
       }
    },
@@ -1391,7 +1449,7 @@ parameters = {
       types: [ "weapon" ],
       functions : {
          "attack" : function(me, attacker, target) {
-            moveAdjacent(attacker, target);
+            moveAdjacentTo(attacker, target);
             say(attacker.name + " bashes " + target.name + " on the head!", attacker, "see");
             call(target, "bash", me);
          }

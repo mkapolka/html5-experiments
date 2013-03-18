@@ -378,11 +378,13 @@ function pickup(object)
    if (player.holding !== undefined) {
       pushGameText("You swap " + player.holding.name + " for " + object.name);
       moveObject(player.holding, object.x, object.y);
+      setContainer(player.holding, object.parent);
       player.holding.obscured = 0;
       player.holding = undefined;
    } else {
       pushGameText("You pick up " + object.name);
    }
+   setContainer(object, player.parent);
    moveObject(object, player.x, player.y);
    player.holding = object;
    object.obscured = 1;

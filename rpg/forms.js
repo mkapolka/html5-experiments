@@ -57,6 +57,8 @@ forms = {
       mobile: 1,
       animated: 1,
 
+      carnivoreGag: 1,
+
       //AI
       hunterThink : 1,
       stressedAttack : 1,
@@ -245,7 +247,8 @@ materials = {
       isLiquid: 1,
       flammable: -1,
       boilable: 1,
-      color: "blue"
+      color: "blue",
+      edible: 1,
    },
    "blood" : {
       name: "blood",

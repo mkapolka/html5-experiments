@@ -295,7 +295,7 @@ parameters.catBrain = {
             return;
          }
 
-         if (Math.random() < .75) {
+         if (Math.random() < .25) {
             add(me, "sleeping");
          }
       }

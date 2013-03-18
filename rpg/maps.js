@@ -10,8 +10,8 @@ maps.garden = {
    "..PP...S..",
    "..P.......",
    ".....W....",
-   "..........",
-   "..@.......",
+   "........TT",
+   "..@......T",
    ".#<###>##.",
    "H########.",
    ],
@@ -20,6 +20,7 @@ maps.garden = {
       L : "lavender",
       S : "coriander",
       P : "peppermint",
+      T : "tea",
       W : "well",
       C : "cat",
       M : "mouse",
@@ -57,6 +58,15 @@ templates.peppermint = {
    material: "plant",
    gagSuppressing : 1,
    soluble: 1,
+}
+
+templates.tea = {
+   name: "a tea bush",
+   form: "bush",
+   material: "plant",
+   soluble: 1,
+   stimulating: 1,
+
 }
 
 //LIBRARY
@@ -271,7 +281,7 @@ templates.moss = {
    name: "a wet moss",
    symbol: "m",
    material: "plant",
-   calming: 1,
+   angering: 1,
    wet: 1,
 }
 
