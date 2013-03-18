@@ -2,7 +2,7 @@ maps = {};
 //GARDEN
 
 maps.garden = {
-   name : "The Monastary Garden",
+   name : "The Monastery Garden",
    map: [
    "...O......",
    ".M...L..C.",
@@ -249,10 +249,10 @@ maps.cave = {
    "##########",
    "####>#####",
    "##.....###",
-   "#H..T....#",
+   "#H..T...M#",
    "#........#",
    "#........#",
-   "#........#",
+   "#M......M#",
    "##.....###",
    "###.######",
    "###.<#####",
@@ -262,8 +262,17 @@ maps.cave = {
       ">" : door("lab"),
       "#" : "stone_wall",
       "T" : "troll",
-      "H" : "mouse_hole"
+      "H" : "mouse_hole",
+      "M" : "moss",
    }
+}
+
+templates.moss = {
+   name: "a wet moss",
+   symbol: "m",
+   material: "plant",
+   calming: 1,
+   wet: 1,
 }
 
 maps.lab = {
