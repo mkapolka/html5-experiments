@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+   <script type="text/javascript" src="jquery-1.9.1.js"></script>
+   <script type="text/javascript" src="forms.js"></script>
+   <script type="text/javascript" src="parameters.js"></script>
+   <script type="text/javascript" src="ai.js"></script>
+   <script type="text/javascript" src="templates.js"></script>
+   <script type="text/javascript" src="methods.js"></script>
+
+   <script type="text/javascript">
+      function runTest(name, test) {
+         var result = $("<p></p>");
+         if (test()) {
+            result.text(name + " passed!");
+            result.css("background", "green");
+         } else {
+            result.text(name + " failed!");
+            result.css("background", "red");
+         }
+         $("body").append(result);
+      }
+
+      function testDissolve() {
+         var a = {};
+         a.calming = 1;
+
+         var b = {};
+         b.anaesthetic = 1;
+         b.isLiquid = 1;
+
+         var out = {};
+         out = combineByType(b, b, a, ["chemical"]);
+
+         return (out.calming == 1 && out.isLiquid == 1 && out.anaesthetic == 1);
+      }
+
+      function testMultiCombine() {
+         var a = {};
+         a.calming = 1;
+         a.flammable = 1;
+      }
+
+      function init() {
+         runTest("Dissolve test", testDissolve);
+      }
+   </script>
+</head>
+
+<body onload="init()">
+
+</body>
+</html>
