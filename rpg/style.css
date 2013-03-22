@@ -13,6 +13,8 @@ h1 {
 }
 
 .content {
+   width: 800px;
+
    -moz-border-radius: 10px;
    border-radius: 10px;
    margin: 20px;
@@ -28,7 +30,6 @@ h1 {
    display: block;
 
    max-height: 500px;
-   overflow: scroll;
 }
 
 .gametext a {
@@ -53,7 +54,6 @@ h1 {
    color: black;
 
    text-align: center;
-   cursor: pointer;
 
    position: relative;
    bottom: 0px;
@@ -62,7 +62,17 @@ h1 {
    -moz-transition: all .25s;
    -webkit-transition: all .25s;
    -o-transition: all .25s;
+}
 
+.button .mnem {
+   position: absolute;
+   display: block;
+   right: 5px;
+   bottom: 5px;
+}
+
+.noselect {
+   cursor: pointer;
    /*Make it unselectable */
    -webkit-touch-callout: none;
    -webkit-user-select: none;
@@ -78,5 +88,73 @@ h1 {
    -webkit-transition: all .25s;
    -o-transition: all .25s;
 
-   bottom: 10px;
+   /*bottom: 10px;*/
+}
+
+#tiles_container {
+   padding: 30px;
+   float: left;
+
+   width: 350px;
+}
+
+.tiles {
+   border-collapse: collapse;
+
+   overflow: hidden;
+   table-layout: fixed;
+   white-space: nowrap;
+
+   width: 320px;
+   height: 320px;
+   /*border: 1px dashed black;*/
+}
+
+.tiles td {
+   width: 32px;
+   height: 32px;
+
+   background-size: 32px 32px;
+   padding: 0;
+   margin: 0;
+   text-align: center;
+
+   overflow: hidden;
+}
+
+.tile {
+   display: block;
+   overflow: hidden;
+}
+
+.tiles td:hover {
+   /*background: url('img/tile.png'), url('img/hover.png');*/
+   background: url('img/hover.png');
+}
+
+.tiles td.selected {
+   /*background: url('img/tile.png'), url('img/targeted.png');*/
+   background: url('img/targeted.png');
+}
+
+#hover{
+   float: left;
+
+   width: 350px;
+}
+
+#hovertext {
+   /*border: 1px black solid;*/
+   float: none;
+   display: block;
+   padding: 30px;
+}
+
+.clear {
+   clear: both;
+}
+
+hr {
+   background-color: black;
+   width: 50%;
 }

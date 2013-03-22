@@ -1,36 +1,49 @@
 <!doctype html>
 <html>
 <head>
-   <title>RPG Mechanic Test</title>
+   <title>The Monastery Garden</title>
    <link rel="stylesheet" href="style.css"></link>
 
    <script type="text/javascript" src="jquery-1.9.1.js"></script>
-   <script type="text/javascript" src="main.js"></script>
-   <script type="text/javascript" src="values.js"></script>
+   <script type="text/javascript" src="jquery.hotkeys.js"></script>
+
+   <script type="text/javascript" src="forms.js"></script>
+   <script type="text/javascript" src="parameters.js"></script>
+   <script type="text/javascript" src="ai.js"></script>
+   <script type="text/javascript" src="templates.js"></script>
    <script type="text/javascript" src="methods.js"></script>
+   <script type="text/javascript" src="rooms.js"></script>
+   <script type="text/javascript" src="maps.js"></script>
 
    <script type="text/javascript" src="game.js"></script>
+
+   <script type="text/javascript">
+
+   var _gaq = _gaq || [];
+   _gaq.push(['_setAccount', 'UA-38176044-1']);
+   _gaq.push(['_trackPageview']);
+
+   (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+   </script>
 </head>
 <body onload="game_init()">
    <div class="content">
-      <h1>The Monk's Garden</h1>
-      <p class="gametext">
-      </p>
-      <div id="actions">
-         <div class="button" onmouseup="click_action('look')">Look</div>
-         <div class="button" onclick="click_action('feel')">Feel</div>
-         <div class="button" onclick="click_action('wait')">Wait</div>
-         <div class="button" id="grabbutton" onclick="click_action('grab')">Grab</div>
-         <div class="button" id="putbutton" onclick="click_action('put')" hidden="true">Put</div>
-      </div>
-      <div id="objects" hidden="true">
-         <div id="object_description"></div>
-         <div id="object_buttons">
-            <div class="button" onmouseup="click_object(0)">Lavender</div>
-            <div class="button" onmouseup="click_object(1)">Tea Kettle</div>
-            <div class="button" onmouseup="click_object(2)">Fire Pit</div>
-            <div class="button" onmouseup="click_object(3)">Burning Thing</div>
+      <h1>The Monastery Garden</h1>
+      <div id="top_part">
+         <div id="tiles_container"></div>
+         <div id="hover">
+            <div id="hovertext"></div>
+            <div id="hoverbuttons"></div>
          </div>
+      </div>
+      <div id="textcontainer" class="clear">
+         <ul class="gametext clear">
+         </ul>
       </div>
    </div>
 </body>
