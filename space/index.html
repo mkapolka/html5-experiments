@@ -1,0 +1,22 @@
+<!doctype html>
+
+<html>
+<head>
+   <title>Amateur Space Cadet</title>
+   <link rel="stylesheet" href="style.css"></style>
+
+   <script src="jquery-1.9.1.js" type="text/javascript"></script>
+   <script src="names.js" type="text/javascript"></script>
+   <script src="trade.js" type="text/javascript"></script>
+   <script type="text/javascript">
+      function onLoad() {
+         var names = "";
+         for (var i = 0; i < 10; i++) names += genFileName() + " ";
+         $(".mainContent").text(names);
+      }
+   </script>
+</head>
+<body onload="onLoad()">
+   <div class="mainContent"></div>
+</body>
+</html>

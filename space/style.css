@@ -1,0 +1,14 @@
+body {
+   background: url('space.gif');
+   color: #AFA;
+   font-family: monospace;
+}
+
+.mainContent {
+   background:black;
+   margin: 0 auto;
+   border: 1px lime solid; 
+   border-radius: 5px 5px;
+   padding: 10px;
+   width: 900px;
+}
