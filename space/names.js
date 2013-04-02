@@ -1,3 +1,10 @@
+Array.prototype.pickRandom = function(){
+   return this[Math.floor(Math.random() * this.length)];
+}
+topics = [
+   "cats", "dogs", "games", "scub"
+]
+
 userNameParts = [
    "xxx","goku","vegeta","miku",
    "mike","tom","420","69",
@@ -8,7 +15,9 @@ userNameParts = [
    "_","mr","boner","bones",
    "koo","butt","cross","franker",
    "sonic","fan","vanilla","cola",
-   "adam","pie","iate","killer"
+   "adam","pie","iate","killer","zombie",
+   "penguin", "ninja", "pirate", "monkey",
+   "cheese",
 ];
 
 function genUserName() {
@@ -70,7 +79,7 @@ fileParts2 = [
 ]
 
 fileParts3 = [
-   "dicks", "fails", "wins", "deaths", "sex", "beliefs", "goofs", "beefs_it", "singing", "dancing",
+   "dicks", "fails", "wins", "deaths", "sex_positions", "beliefs", "goofs", "beefs_it", "singing", "dancing",
    "eating", "foods", "customs", "dances", "facts", "games", "lunches", "rage", "noooo"
 ]
 
