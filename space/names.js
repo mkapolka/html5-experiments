@@ -1,8 +1,12 @@
 Array.prototype.pickRandom = function(){
    return this[Math.floor(Math.random() * this.length)];
 }
-topics = [
+topic_names = [
    "cats", "dogs", "games", "scub"
+]
+
+topic_cxns = [
+   "cats cute .9",
 ]
 
 userNameParts = [

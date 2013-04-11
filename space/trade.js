@@ -3,7 +3,7 @@ function GameFile() {
    this.rarity = 10;
    this.value = Math.floor(Math.random() * 10);
 
-   this.topic = topics.pickRandom();
+   this.topic = topic_names.pickRandom();
    this.opinion = Math.floor(Math.random() * 10 - 5);
    this.tags = [];
 
@@ -25,37 +25,54 @@ TraderTypes = {
    Savvy: 2,
 }
 
-function Opinions(topics) {
+function Demographics() {
+   //Topics: topic (string) => connections (object)
+   //Connections: topic (string) => strength (float)
    this.topics = {};
-   for (var t in topics) {
-      if (!topics.hasOwnProperty(t)) continue;
-      this.topics[topics[t]] = 0;
-   };
-
-   this.randomize = function() {
-      for (var t in this.topics) {
-         this.topics[t] = Math.floor(Math.random() * 10 - 5);
-      }
+   this.addTopic = function(name, cxns) {
+      this.topics[name] = {
+         name: name,
+         cxns: cxns,
+      };
    }
 
-   this.get = function(topic) {
-      return this.topics[topic];
+   //Populate
+   var me = this;
+   topic_names.forEach(function(a) {
+      me.addTopic(a, {});
+   });
+   //Add cxns
+   topic_cxns.forEach(function(a) {
+      cxn = a.split(" ");
+      me.topics[cxn[0]].cxns[cxn[1]] = parseFloat(cxn[2]);
+   });
+
+   this.setCxn = function(name, other, strength) {
+      topics[name].cxns[other] = strength;
+      topics[other].cxns[name] = strength;
    }
 
-   this.influence = function(topic, value) {
-      if (this.topics[topic] === undefined) this.topics[topic] = 0;
-      var d = value - this.topics[topic];
-      var dr = Math.abs(d / 10);
-
-      if (Math.random() > dr) {
-         if (d > 0) {
-            this.topics[topic] += 1;  
-            if (this.topics[topic] > 5) this.topics[topic] = 5;
-         } else if (d < 0) {
-            this.topics[topic] -= 1;
-            if (this.topics[topic] < -5) this.topics[topic] = -5;
+   this.createOpinionList = function(topic, opinion) {
+      var list = {};
+      var visited = [];
+      var queue = [];
+      function visit(topic, value) {
+         if (visisted.indexOf(topic) !== -1) return;
+         if (list[topic] === undefined) list[topic] = 0;
+         list[topic] += value;
+         visited.push(topic);
+         for (var t2 in this.topics[topic].cxns) {
+            queue.push(function() {
+               visit(t2, value * this.topics[topic].cxns[t2]);
+            });
          }
       }
+
+      queue.push(function() {
+         visit(topic, 1);
+      });
+
+      while (queue.length > 0) queue.pop()();
    }
 }
 
@@ -65,9 +82,7 @@ function Person() {
    this.capacity = 5;
    this.type = [0,1,2].pickRandom();
    this.likes = 0;
-   this.opinions = new Opinions(topics);
-
-   this.opinions.randomize();
+   this.opinions = {};
 
    this.visitForum = function(posts) {
       this.sortTreasures();
@@ -102,7 +117,6 @@ function Person() {
    }
 
    this.evalFile = function(file) {
-      var d = Math.abs(file.opinion - this.opinions.get(file.topic)) / 2;
       var v;
       switch(this.type) {
          default:
@@ -118,8 +132,7 @@ function Person() {
             v = file.rarity * file.value;
          break;
       }
-
-      return v * (1-d);
+      return v;
    }
 
    this.sortTreasures = function() {
