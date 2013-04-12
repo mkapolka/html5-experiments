@@ -109,6 +109,7 @@ function degToRad(degrees) {
 function initBuffers() {
    var params = makeTestParams();
    segment = generateSegment(null, params);
+   countSegmentMaxHeight(segment);
 
    var rr = makeSegmentRenderable(segment, gl);
    renderables.push(rr);

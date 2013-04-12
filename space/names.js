@@ -1,6 +1,30 @@
 Array.prototype.pickRandom = function(){
    return this[Math.floor(Math.random() * this.length)];
 }
+
+Array.prototype.forEachRandom = function(callback) {
+	var copy = this.filter(function(a){ return true; });
+	while (copy.length > 0){
+		var i = Math.floor(Math.random() * copy.length);
+		callback(copy.splice(i,1)[0]);
+	}
+}
+
+function forEachRandom(object, callback) {
+	var keys = [];
+	for (var v in object) {
+		if (object.hasOwnValue(v)) {
+			keys.push(v);
+		}
+	}
+
+	while (keys.length > 0){
+		var i = Math.floor(Math.random() * keys.length);
+		var k = keys.splice(i, 1)[0];
+		callback(k, keys[k]);
+	}
+}
+
 topics = [
    "cats", "dogs", "games", "scub"
 ]

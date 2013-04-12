@@ -189,7 +189,8 @@ function addSegmentToRenderable(vertexArray, elementArray, colorArray,
 
    var scaleMatrix = mat4.create();
    mat4.identity(scaleMatrix);
-   var dist = countSegmentMaxHeight(getBaseSegment(segment)) - countSegmentMaxHeight(segment);
+   //var dist = countSegmentMaxHeight(getBaseSegment(segment)) - countSegmentMaxHeight(segment);
+   var dist = getBaseSegment(segment).maxHeight - segment.maxHeight;
    mat4.scale(scaleMatrix, scaleMatrix, [Math.pow(.6, dist), 1, Math.pow(.6, dist)]);
    //Add vertices
    for (var i in templateVertices)
@@ -304,6 +305,8 @@ function countSegmentMaxHeight(segment)
             max = ch;
          }
       }
+
+      segment.maxHeight = max;
 
       return max;
    }

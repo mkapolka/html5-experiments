@@ -93,6 +93,8 @@ function reuseClick()
 {
    var sp = makeTestParams();
    var segment = generateSegment(null, sp);
+   countSegmentMaxHeight(segment);
+
    var renderable = renderables[0];
    reuseRenderable(renderable, segment);
 }

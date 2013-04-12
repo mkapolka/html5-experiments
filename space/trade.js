@@ -25,49 +25,22 @@ TraderTypes = {
    Savvy: 2,
 }
 
-function Opinions(topics) {
-   this.topics = {};
-   for (var t in topics) {
-      if (!topics.hasOwnProperty(t)) continue;
-      this.topics[topics[t]] = 0;
-   };
-
-   this.randomize = function() {
-      for (var t in this.topics) {
-         this.topics[t] = Math.floor(Math.random() * 10 - 5);
-      }
-   }
-
-   this.get = function(topic) {
-      return this.topics[topic];
-   }
-
-   this.influence = function(topic, value) {
-      if (this.topics[topic] === undefined) this.topics[topic] = 0;
-      var d = value - this.topics[topic];
-      var dr = Math.abs(d / 10);
-
-      if (Math.random() > dr) {
-         if (d > 0) {
-            this.topics[topic] += 1;  
-            if (this.topics[topic] > 5) this.topics[topic] = 5;
-         } else if (d < 0) {
-            this.topics[topic] -= 1;
-            if (this.topics[topic] < -5) this.topics[topic] = -5;
-         }
-      }
-   }
-}
-
 function Person() {
    this.name = genUserName();
    this.treasures = [];
    this.capacity = 5;
    this.type = [0,1,2].pickRandom();
    this.likes = 0;
-   this.opinions = new Opinions(topics);
-
-   this.opinions.randomize();
+   this.opinions = {};
+	this.associations = {};
+	//randomize opinions (-1, 0, or 1)
+	topics.forEach(function(a){ opinions[a] = [-1, 0, 1].pickRandom() });
+	//Add a few random associations
+	topics.forEach(function(a){ assocations[a] = [];
+		for (var i = 0; i < Math.random() * 3; i++) {
+			associations[a].push(topics.pickRandom());
+		}
+	});
 
    this.visitForum = function(posts) {
       this.sortTreasures();
@@ -97,8 +70,30 @@ function Person() {
       posts.push(this.treasures.pickRandom());
    }
 
+	this.tickOpinions() {
+		var me = this;
+		forEachRandom(opinions, function(k,v) {
+			var ass = me.associations[k];
+			var total = 0;
+			for each (var v in ass) {
+				if (ass.hasOwnProperty(v) && v !== k) {
+					total += ass[v];
+				}
+			}
+
+			if (total > 0) {
+				me.opinions[k] = 1;
+			} else if (total < 0) {
+				me.opinions[k] = -1;
+			} else {
+				me.opinions[k] = 0;
+			}
+		});
+	}
+
    this.consume = function(media) {
-      this.opinions.influence(media.topic, media.opinion);
+		//Influence
+			
    }
 
    this.evalFile = function(file) {
