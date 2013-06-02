@@ -1,34 +1,3 @@
-function makeFileLI(file, clickMethod, overMethod, outMethod) {
-   var topic = (file.opinion>0?"pro ":file.opinion===0?"":"anti ") + file.topic;
-   var li = $("<li><p>"+file.name+"</p><p>Rarity: " + file.rarity + " Quality:"+file.value+" Downloads: " + file.downloads+" Topic: " + topic + "</p></li>");
-   li.data("file", file);
-
-   li.click(clickMethod);
-   li.mouseover(overMethod);
-   li.mouseout(outMethod);
-
-   return li;
-}
-
-function makeFileList(files, title, clickMethod, overMethod, outMethod) {
-   if (!title) title = "";
-   var output = $("<ul class='fileList'>" + title + "</ul>");
-   files.forEach(function(a){ output.append(makeFileLI(a, clickMethod, overMethod, outMethod))});
-   return output;
-}
-
-function makePlayerList(players, title) {
-   if (!title) title = "";
-   function makePlayerLI(player) {
-      return $("<li>"+player.name+"</li>");
-   }
-
-   var output = $("<ul class='fileList'>" + title + "</ul>");
-   //output.append(players.reduce(function(pv, cv){ return pv.add(makePlayerLI(cv));}, $("")));
-   players.forEach(function(a){ output.append(makePlayerLI(a, clickMethod, overMethod, outMethod))});
-   return output;
-}
-
 function myFileClick() {
    var file = $(this).data("file");
    if (forum.indexOf(file) !== -1) {
@@ -109,11 +78,12 @@ function forumOut(e) {
    $(".dragIcon").hide();
 }
 
-function updateForumInfo() {
-   $(".forumPosts").html("");
-   $(".forumPosts").html(makeFileList(forum, "Files", forumClick, forumOver, forumOut));
+function updateForumInfo(forum) {
+   
 }
 
 function f5Click() {
-   doRound(players, [forum]);
+   doRound();
+   console.log(people);
+   refresh();
 }

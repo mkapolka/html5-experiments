@@ -1,52 +1,106 @@
 <!doctype html>
-
 <html>
 <head>
    <title>Amateur Space Cadet</title>
    <link rel="stylesheet" href="style.css"></style>
 
    <script src="jquery-1.9.1.js" type="text/javascript"></script>
-   <script src="names.js" type="text/javascript"></script>
-   <script src="trade.js" type="text/javascript"></script>
+   <script src="handlebars.js" type="text/javascript"></script>
+
+   <script src="helpers.js" type="text/javascript"></script>
    <script src="ui.js" type="text/javascript"></script>
+   <script src="memes.js" type="text/javascript"></script>
+   <script src="media.js" type="text/javascript"></script>
+   <script src="person.js" type="text/javascript"></script>
+   <script src="forum.js" type="text/javascript"></script>
+   <script src="location.js" type="text/javascript"></script>
+
    <script type="text/javascript">
-      var forum = undefined;
-      var ns;
+      function initPeople() {
+         var people = [];
+         for (var i = 0; i < 20; i++) {
+            var person = generateRandomPerson();
+            //Give the person some OC
+            for (var j = 0; j < Math.random() * 5; j++) {
+               var liked_memes = person.getLikedMemes().concat(person.getNeutralMemes());
+               var file_memes = [liked_memes.pickRandom()];
+               var media = new Media(file_memes);
+               media.creator = person;
+               person.media.push(media);
+               person.location = forum;
+            }
+            people.push(person);
+         }
+         return people;
+      }
+
+      for (var p in people) {
+         var person = people[p]
+         //console.log(person.name + " : " + person.evalForum(forum));
+      }
+
       function onLoad() {
+         //Insert handlebar.js templates
+         $.ajax("templates.html", { cache: false }).done(function(data) {
+            $("body").append(data); 
+
+            //Render file list
+            //showUsers();
+            showLocation();
+         });
          player = new Person();
          player.name = "The Player";
-         ns = initNoosphere();
-         players = initPeople(ns, 20);
-         //populateTreasures(player, ns);
-         forum = initForum(ns);
-         demo = new Demographics();
-         //$(".myfiles").append(makePlayerList(players, "Users"));
 
-         updatePlayerInfo();
-         updateForumInfo();
 
          $("body").mousemove( function(me) {
             $(".dragIcon").css("left", me.pageX + 10);
             $(".dragIcon").css("top", me.pageY + 10);
          });
       }
-      
+
+      function doRound() {
+         people.forEach(function(player) {
+            player.tick();
+         });
+      }
+
+      var refresh = function(){};
+      function showUsers() {
+         $("#forumPosts").html(render_users(people));
+         refresh = showUsers;
+      }
+
+      function showPosts() {
+         try {
+            $("#forumPosts").html(render_posts(forum.posts));
+         } catch (e) {
+            console.log(e);
+         }
+         refresh = showPosts;
+      }
+
+      function showUser(user_id) {
+         var user = people.find(function(u){ return u.guid === user_id});
+         if (user !== undefined) {
+            $("#forumPosts").html(render_user(user));
+         } else {
+            throw "Couldn't find user with ID " + user_id;
+         }
+      }
+
+      function showLocation(where) {
+         $("#forumPosts").html(render_location(new Location()));
+      }
+
+      //Initialization
+      var forum = genRandomForum();
+      var people = initPeople();
    </script>
 </head>
 <body onload="onLoad()">
-   <div class="dragIcon"></div>
    <div class="mainContent">
       <div class="forum">
-         <h3>Save One, Post One!<div id="f5" onclick="f5Click()">F5</div></h3>
-         <div class="forumPosts">
-         </div>
-      </div>
-      <div id="mystats">
-         <div style='border: 1px lime solid; padding: 10px; margin-bottom:5px'>
-         <h3>My Stats:</h3>
-         <div id="mydetails"></div>
-         </div>
-         <div id="myfiles">
+         <div id="forumPosts" class="fileList">
          </div>
       </div>
    </div>

@@ -4,6 +4,32 @@ body {
    font-family: monospace;
 }
 
+.greenBox {
+   border: 1px lime solid;
+   padding: 2px;
+   margin: 10px;
+   display: block;
+}
+
+.darkBox {
+   border: 1px lime solid;
+   padding: 2px;
+   margin: 10px;
+   display: block;
+
+   background: rgba(0,0,0,.8);
+}
+
+.greenButton {
+   text-decoration: underline;
+}
+
+.greenButton:hover {
+   background: lime;
+   color: black;
+   cursor: pointer;
+}
+
 .mainContent {
    background: rgba(0, 0, 0, .5);
    margin: 0 auto;
@@ -15,139 +41,58 @@ body {
    overflow: auto;
 }
 
-#mystats {
-   width: 39%;
-   float: right;
+.post {
+   margin: 10px;
 }
 
-#mystats h3 {
-   margin: 0;
-   padding: 0;
-   margin-bottom: 10px;
-   text-align: center;
+.meme {
+   display: inline-block;
 }
 
-#myfiles {
-   
-}
-
-ul.fileList {
-   border: 1px lime solid;
-   margin: 0 auto;
-   padding: 10px;
-   
-   clear: right;
-
-}
-
-ul * {
-   -webkit-touch-callout: none;
-   -webkit-user-select: none;
-   -khtml-user-select: none;
-   -moz-user-select: none;
-   -ms-user-select: none;
-   user-select: none;
-}
-
-ul.fileList li {
-   background: url('img/file_icon.png') no-repeat left center;
-   padding-left: 50px;
-   min-height: 50px;
-
-   overflow: hidden;
-
-   border: 1px lime solid;
-   margin-top: 10px;
-   margin-bottom: 10px;
-}
-
-ul.fileList li:hover {
+.fakeLink {
+   text-decoration: underline;
    cursor: pointer;
-   background-color: #131;
-   color: lime;
 }
 
-ul.fileList li.repost:hover {
-   background-color: #F11;
-   background: url('img/repost_red.png');
-}
-
-ul.fileList li.postOK:hover {
-   background-color: #131;
-}
-
-ul.fileList li .detail {
-   background: #AFA;
+.fakeLink:hover {
    color: black;
-   border-radius: 5px 5px;
+   background: lime;
+}
 
-   padding: 5px;
-   margin: 1px;
-   line-height: normal;
-   min-height: auto;
+/* LOCATIONS */
+.location {
+   width: 800px;
+   height: 600px;
+
+   background-size: 100% 100%; 
+
+   position: relative;
+}
+
+.location h1 {
+   left: 0px;
+   top: 0px;
+
+   padding: 10px;
+   margin: 20px;
+
+   line-height: 50px;
+   font-size: 50px;
 
    display: inline-block;
 }
 
-ul.fileList .deleteButton {
+#location_options {
    display: block;
-   float: right;
-   border: 1px green solid;
-   color: red;
-   text-align: center;
-   top: 0;
-   right: 0;
-   width: 15px;
-   height: 15px;
-
-   cursor: pointer;
-}
-
-.details {
-   height: 0px;
-   overflow: hidden;
-}
-
-.forum {
-   border: 1px lime solid;
-   min-height: 600px;
-   width: 60%;
-   float: left;
-
-   display: block;
-}
-
-.forum h3 {
-   text-align: center;
-}
-
-.forumPosts {
-   padding-left: 10px;
-   padding-right: 10px;
-}
-
-.myfiles:after {
-   clear: both;
-}
-
-.dragIcon {
-   border: 1px lime solid;
-   background: black;
-   padding: 5px;
-
    position: absolute;
-   /*display: none;*/
+
+   width: 50%;
+   height: 50%;
+   bottom: 0px;
+   left: 0px;
 }
 
-#f5 {
-   border: 1px lime solid;
-   padding: 2px;
-   margin: 10px;
-   display: inline;
-}
-
-#f5:hover {
-   background: lime;
-   color: black;
-   cursor: pointer;
+.location_option {
+   padding-left: 10px;
+   width: 50%;
 }

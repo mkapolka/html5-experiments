@@ -1,0 +1,113 @@
+<script id="location" type="text/x-handlebars-template">
+   <div id="location_bg" class="location greenBox" 
+   style="background: url('{{background}}'); background-size: 100% auto">
+      <h1 class="darkBox">{{name}}</h2>
+      <div id="location_options">
+         {{#options}}
+            <div class="location_option greenButton darkBox"><h2>{{text}}</h2></div>
+         {{/options}}
+      </div>
+   </div>
+</script>
+
+<script id="meme-partial" type="text/x-handlebars-template">
+   <div class="meme fakeLink">{{this}}</div>
+</script>
+
+<script id="meme-list" type="text/x-handlebars-tempalte">
+   {{#each this}}<div class="meme">{{this}}</div>,&nbsp;{{/each}}
+</script>
+
+<script id="user-link" type="text/x-handlebars-template">
+   <a onclick="showUser({{guid}})" style="text-decoration:underline" class="fakeLink">{{name}}</a>
+</script>
+
+<script id="user-partial" type="text/x-handlebars-template">
+   <div class="greenBox">
+      <p>Name: {{>user-link}}</p>
+      Likes:  {{#likes}}{{>meme}}{{/likes}}<br/>
+      Dislikes: {{#dislikes}}{{>meme}}{{/dislikes}}
+   </div>
+</script>
+
+<script id="user-list" type="text/x-handlebars-template">
+   <ul class="userList">
+      {{#each this}}
+         <li>
+         {{> user}}
+         </li>
+      {{/each}}
+   </ul>
+</script>
+
+<script id="user-detail" type="text/x-handlebars-template">
+   <div class="greenBox">
+   <h3>User Info:</h3>
+      {{>user}}<br/>
+      Files:<br/>
+      {{>file-list media}}
+   </div>
+</script>
+
+<script id="file-partial" type="text/x-handlebars-template">
+   <div id="file" class="greenBox" style="padding: 10px">
+      {{name}} by {{>user-link creator}}<br/>
+      Downloads: {{ downloads }} Likes: {{ likes }}<br/>
+      Tags: {{#each memes}}{{> meme}}{{/each}}
+   </div>
+</script>
+
+<script id="file-list" type="text/x-handlebars-template">
+   <ul class="fileList">
+      {{#each this}}
+         {{> file}}
+      {{/each}}
+   </ul>
+</script>
+
+<script id="post-partial" type="text/x-handlebars-template">
+   <div class="post">
+      {{>user-link poster}}{{!poster.name }} posted:<br/>
+      <div>
+         {{> file media}}
+      </div>
+   </div>
+</script>
+
+<script id="post-list" type="text/x-handlebars-template">
+   <ul class="postList">
+      {{#each this}}
+         <li>
+            {{> post}}
+         </li>
+      {{/each}}
+   </ul>
+</script>
+
+<script type="text/javascript">
+   Handlebars.registerPartial("user", $("#user-partial").html());
+   Handlebars.registerPartial("user-link", $("#user-link").html());
+   Handlebars.registerPartial("file", $("#file-partial").html());
+   Handlebars.registerPartial("file-list", $("#file-list").html());
+   Handlebars.registerPartial("post", $("#post-partial").html());
+   Handlebars.registerPartial("meme", $("#meme-partial").html());
+   Handlebars.registerPartial("meme-list", $("#meme-list").html());
+
+   render_files = Handlebars.compile($("#file-list").html());
+   render_users = Handlebars.compile($("#user-list").html());
+   render_user =  Handlebars.compile($("#user-detail").html());
+   render_posts = Handlebars.compile($("#post-list").html());
+   render_location = Handlebars.compile($("#location").html());
+
+   Handlebars.registerHelper("debug", function(optionalValue) {
+     console.log("Current Context");
+     console.log("====================");
+     console.log(this);
+    
+     if (optionalValue) {
+       console.log("Value");
+       console.log("====================");
+       console.log(optionalValue);
+     }
+   });
+</script>
