@@ -1236,7 +1236,7 @@ parameters = {
          "tick":function(me) {
             var haswater = false;
             for (var c in me.contents) {
-               if (me.contents[c].material === "water") {
+               if (me.contents[c].material === materials.water) {
                   haswater = true;
                }
             }

@@ -642,7 +642,7 @@ function getObjectsTouching(object) {
       var output = [];
 
       for (var i in object.parent.contents){
-         if (object.parent.contents[i] != object) {
+         if (object.parent.contents[i] !== object) {
             output.push(object.parent.contents[i]);
          }
       }
